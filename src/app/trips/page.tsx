@@ -2,17 +2,12 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
 import { TripDetailSheet } from "@/components/trip-detail-sheet";
-import { PlusIcon, PlaneIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import type { Trip } from "@/lib/db/schema";
-import { useCityPhoto } from "./hooks/use-city-photo";
-import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS, STATUS_CARD_ACCENT } from "./constants";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { STATUS_LABELS, STATUS_ICONS } from "./constants";
+import { TripCard } from "./components/trip-card";
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -20,9 +15,10 @@ export default function TripsPage() {
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/trips");
-    if (res.ok) setTrips(await res.json());
+  const load = useCallback(() => {
+    fetch("/api/trips")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Trip[] | null) => { if (data) setTrips(data); });
   }, []);
 
   useEffect(() => {
@@ -37,29 +33,47 @@ export default function TripsPage() {
   const statusOptions = ["all", "planning", "active", "done"];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
         <div className="mx-auto flex max-w-lg items-center px-5 py-3 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
           <h1 className="text-base font-semibold tracking-tight">Trips</h1>
+          {trips.length > 0 && (
+            <span className="ml-auto text-xs tabular-nums text-muted-foreground/60">
+              {trips.length} trip{trips.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
         {trips.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 pt-24 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-              <PlaneIcon className="size-8 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
+            <div className="relative flex size-24 items-center justify-center">
+              {/* Decorative rings */}
+              <div className="absolute inset-0 rounded-full border border-primary/10" />
+              <div className="absolute inset-3 rounded-full border border-primary/10" />
+              <div className="absolute inset-6 rounded-full bg-primary/6" />
+              {/* SVG graphic */}
+              <svg viewBox="0 0 48 48" className="relative size-12 text-primary/50" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                {/* Dotted flight arc */}
+                <path d="M6 36 Q24 8 42 28" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.5" strokeDasharray="3 3" fill="none"/>
+                {/* Plane */}
+                <path d="M28 18l-4-4-2 2 2 3-8 5 1 2 5-1 2 4 2-1-1-5 3-2z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="0.5"/>
+                {/* Destination dot */}
+                <circle cx="42" cy="28" r="2" fill="currentColor" fillOpacity="0.4"/>
+                <circle cx="42" cy="28" r="4" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1"/>
+              </svg>
             </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-muted-foreground">No trips yet</p>
-              <p className="text-xs text-muted-foreground/60">Tap + to plan your first trip</p>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm font-semibold text-foreground/70">No trips yet</p>
+              <p className="text-xs text-muted-foreground/60">Tap + to plan your first adventure</p>
             </div>
           </div>
         ) : (
           <>
             {/* Status filter */}
             <div className="flex items-center gap-3 pb-5">
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 w-12">
+              <span className="shrink-0 w-12 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
                 Status
               </span>
               <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
@@ -84,39 +98,13 @@ export default function TripsPage() {
               <p className="pt-16 text-center text-sm text-muted-foreground">No trips match your filters.</p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {filteredTrips.map((trip) => {
-                  const cities: string[] = JSON.parse(trip.cities);
-                  return (
-                    <li
-                      key={trip.id}
-                      className={`cursor-pointer overflow-hidden rounded-xl border bg-card shadow-sm transition-colors active:bg-muted border-l-4 ${STATUS_CARD_ACCENT[trip.status] ?? ""}`}
-                      onClick={() => setSelectedTrip(trip)}
-                    >
-                      <div className="px-4 py-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-medium leading-snug">{trip.name}</span>
-                          <Badge className={`mt-0.5 shrink-0 border text-xs ${STATUS_COLORS[trip.status] ?? "bg-muted text-muted-foreground"}`}>
-                            <span className="mr-1">{STATUS_ICONS[trip.status]}</span>
-                            {STATUS_LABELS[trip.status] ?? trip.status}
-                          </Badge>
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{cities.join(" · ")}</p>
-                        {(trip.startDate || trip.endDate) && (
-                          <p className="mt-1 text-xs text-muted-foreground/70">
-                            {trip.startDate && formatDate(trip.startDate)}
-                            {trip.startDate && trip.endDate && " – "}
-                            {trip.endDate && formatDate(trip.endDate)}
-                          </p>
-                        )}
-                        {trip.notes && (
-                          <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                            {trip.notes}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {filteredTrips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    onClick={() => setSelectedTrip(trip)}
+                  />
+                ))}
               </ul>
             )}
           </>
