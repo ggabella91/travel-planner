@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       label: string;
       value: string;
       sublabel: string;
-      meta: { country: string };
+      meta: { country: string; state?: string };
     }> = [];
 
     for (const item of data) {
