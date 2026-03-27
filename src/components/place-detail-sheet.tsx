@@ -19,9 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ExternalLinkIcon, PencilIcon, XIcon } from "lucide-react";
+import { ExternalLinkIcon, PencilIcon } from "lucide-react";
 import type { Place } from "@/lib/db/schema";
-import { CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/categories";
+import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_COLORS } from "@/lib/categories";
+import { getFlag } from "@/lib/flags";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 
 interface PlaceDetailSheetProps {
   place: Place | null;
@@ -125,16 +127,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
           {editing ? (
             <>
               <SheetHeader className="px-0 pt-3 pb-5">
-                <div className="flex items-center justify-between pr-6">
-                  <SheetTitle>Edit place</SheetTitle>
-                  <button
-                    onClick={cancelEditing}
-                    className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    aria-label="Cancel edit"
-                  >
-                    <XIcon className="size-4" />
-                  </button>
-                </div>
+                <SheetTitle>Edit place</SheetTitle>
               </SheetHeader>
 
               <form onSubmit={handleSave} className="flex flex-col gap-5">
@@ -151,19 +144,32 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="edit-city">City *</Label>
-                    <Input
+                    <AutocompleteInput
                       id="edit-city"
                       value={form.city ?? ""}
-                      onChange={(e) => set("city", e.target.value)}
+                      onChange={(v) => set("city", v)}
+                      onSearch={async (q) => {
+                        const res = await fetch(`/api/autocomplete/cities?q=${encodeURIComponent(q)}`);
+                        return res.ok ? res.json() : [];
+                      }}
+                      onSelect={(opt) => {
+                        set("city", opt.value);
+                        if (opt.meta?.country && !form.country) set("country", opt.meta.country);
+                      }}
                       required
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="edit-country">Country *</Label>
-                    <Input
+                    <AutocompleteInput
                       id="edit-country"
                       value={form.country ?? ""}
-                      onChange={(e) => set("country", e.target.value)}
+                      onChange={(v) => set("country", v)}
+                      onSearch={async (q) => {
+                        const res = await fetch(`/api/autocomplete/countries?q=${encodeURIComponent(q)}`);
+                        return res.ok ? res.json() : [];
+                      }}
+                      onSelect={(opt) => set("country", opt.value)}
                       required
                     />
                   </div>
@@ -203,7 +209,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                     <Label>Status</Label>
                     <Select value={form.status ?? "backlog"} onValueChange={(v) => set("status", v ?? "backlog")}>
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue className="capitalize" />
                       </SelectTrigger>
                       <SelectContent>
                         {STATUSES.map((s) => (
@@ -254,8 +260,11 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                   />
                 </div>
 
-                <SheetFooter className="px-0 pt-2 pb-4">
-                  <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
+                <SheetFooter className="px-0 pt-2 pb-4 flex-row gap-3">
+                  <Button type="button" variant="outline" className="flex-1 cursor-pointer" onClick={cancelEditing}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1 cursor-pointer" disabled={loading}>
                     {loading ? "Saving…" : "Save changes"}
                   </Button>
                 </SheetFooter>
@@ -269,6 +278,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                   <div className="flex shrink-0 items-center gap-2">
                     {place.category && (
                       <Badge className={`border text-xs ${CATEGORY_COLORS[place.category] ?? "bg-muted text-muted-foreground"}`}>
+                        <span className="mr-1">{CATEGORY_ICONS[place.category]}</span>
                         {CATEGORY_LABELS[place.category] ?? place.category}
                       </Badge>
                     )}
@@ -282,7 +292,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {place.city}, {place.country}
+                  {getFlag(place.country)} {place.city}, {place.country}
                 </p>
               </SheetHeader>
 

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -97,21 +98,34 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="city">City *</Label>
-              <Input
+              <AutocompleteInput
                 id="city"
                 placeholder="Tokyo"
                 value={form.city}
-                onChange={(e) => set("city", e.target.value)}
+                onChange={(v) => set("city", v)}
+                onSearch={async (q) => {
+                  const res = await fetch(`/api/autocomplete/cities?q=${encodeURIComponent(q)}`);
+                  return res.ok ? res.json() : [];
+                }}
+                onSelect={(opt) => {
+                  set("city", opt.value);
+                  if (opt.meta?.country && !form.country) set("country", opt.meta.country);
+                }}
                 required
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="country">Country *</Label>
-              <Input
+              <AutocompleteInput
                 id="country"
                 placeholder="Japan"
                 value={form.country}
-                onChange={(e) => set("country", e.target.value)}
+                onChange={(v) => set("country", v)}
+                onSearch={async (q) => {
+                  const res = await fetch(`/api/autocomplete/countries?q=${encodeURIComponent(q)}`);
+                  return res.ok ? res.json() : [];
+                }}
+                onSelect={(opt) => set("country", opt.value)}
                 required
               />
             </div>

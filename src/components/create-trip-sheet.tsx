@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Label } from "@/components/ui/label";
 
 interface CreateTripSheetProps {
@@ -66,11 +67,16 @@ export function CreateTripSheet({ open, onOpenChange, onCreated }: CreateTripShe
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="trip-city">City *</Label>
-              <Input
+              <AutocompleteInput
                 id="trip-city"
                 placeholder="e.g. Tokyo"
                 value={form.city}
-                onChange={(e) => set("city", e.target.value)}
+                onChange={(v) => set("city", v)}
+                onSearch={async (q) => {
+                  const res = await fetch(`/api/autocomplete/cities?q=${encodeURIComponent(q)}`);
+                  return res.ok ? res.json() : [];
+                }}
+                onSelect={(opt) => set("city", opt.value)}
                 required
               />
             </div>
