@@ -33,6 +33,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
   const [form, setForm] = useState({
     name: "",
     city: "",
+    state: "",
     country: "",
     category: "",
     source: "",
@@ -54,7 +55,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Failed to save");
-      setForm({ name: "", city: "", country: "", category: "", source: "", notes: "", url: "" });
+      setForm({ name: "", city: "", state: "", country: "", category: "", source: "", notes: "", url: "" });
       onOpenChange(false);
       onAdded();
     } finally {
@@ -96,26 +97,37 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
                 }}
                 onSelect={(opt) => {
                   set("city", opt.value);
+                  if (opt.meta?.state) set("state", opt.meta.state);
                   if (opt.meta?.country && !form.country) set("country", opt.meta.country);
                 }}
                 required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="country">Country *</Label>
-              <AutocompleteInput
-                id="country"
-                placeholder="Japan"
-                value={form.country}
-                onChange={(v) => set("country", v)}
-                onSearch={async (q) => {
-                  const res = await fetch(`/api/autocomplete/countries?q=${encodeURIComponent(q)}`);
-                  return res.ok ? res.json() : [];
-                }}
-                onSelect={(opt) => set("country", opt.value)}
-                required
+              <Label htmlFor="state">State / Province</Label>
+              <Input
+                id="state"
+                placeholder="e.g. Osaka Prefecture"
+                value={form.state}
+                onChange={(e) => set("state", e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="country">Country *</Label>
+            <AutocompleteInput
+              id="country"
+              placeholder="Japan"
+              value={form.country}
+              onChange={(v) => set("country", v)}
+              onSearch={async (q) => {
+                const res = await fetch(`/api/autocomplete/countries?q=${encodeURIComponent(q)}`);
+                return res.ok ? res.json() : [];
+              }}
+              onSelect={(opt) => set("country", opt.value)}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -123,7 +135,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
               <Label>Category</Label>
               <Select value={form.category} onValueChange={(v) => set("category", v ?? "")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pick one" />
+                  <SelectValue className="capitalize" placeholder="Pick one" />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => (
@@ -138,7 +150,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
               <Label>Source</Label>
               <Select value={form.source} onValueChange={(v) => set("source", v ?? "")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Where from?" />
+                  <SelectValue className="capitalize" placeholder="Where from?" />
                 </SelectTrigger>
                 <SelectContent>
                   {SOURCES.map((s) => (

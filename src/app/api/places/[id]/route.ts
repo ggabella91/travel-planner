@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
 export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/places/[id]">) {
   const { id } = await ctx.params;
   const body = await req.json();
-  const { name, city, country, category, notes, source, url, status, rating } = body;
+  const { name, city, state, country, category, notes, source, url, status, rating } = body;
 
   if (!name || !city || !country) {
     return Response.json({ error: "name, city, and country are required" }, { status: 400 });
@@ -17,6 +17,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/places/[id
     .set({
       name,
       city,
+      state: state || null,
       country,
       category: category || null,
       notes: notes || null,

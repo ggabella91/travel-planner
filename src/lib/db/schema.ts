@@ -4,6 +4,7 @@ export const places = pgTable("places", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   city: text("city").notNull(),
+  state: text("state"),
   country: text("country").notNull(),
   category: text("category"), // 'restaurant' | 'neighborhood' | 'activity' | 'spot' | 'bar' | 'cafe'
   notes: text("notes"),

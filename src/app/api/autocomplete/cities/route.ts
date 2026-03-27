@@ -70,7 +70,7 @@ export async function GET(request: Request) {
         label: city,
         value: city,
         sublabel: sublabelParts.join(", "),
-        meta: { country },
+        meta: { country, state },
       });
 
       if (results.length >= 8) break;

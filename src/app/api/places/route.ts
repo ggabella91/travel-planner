@@ -10,7 +10,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = await request.json();
 
-  const { name, city, country, category, notes, source, url } = body;
+  const { name, city, state, country, category, notes, source, url } = body;
 
   if (!name || !city || !country) {
     return Response.json(
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const [place] = await db
     .insert(places)
-    .values({ id, name, city, country, category, notes, source, url })
+    .values({ id, name, city, state: state || null, country, category, notes, source, url })
     .returning();
 
   return Response.json(place, { status: 201 });
