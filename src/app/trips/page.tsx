@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
+import { TripDetailSheet } from "@/components/trip-detail-sheet";
 import { PlusIcon } from "lucide-react";
 import type { Trip } from "@/lib/db/schema";
 
@@ -26,6 +27,7 @@ function formatDate(iso: string) {
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/trips");
@@ -57,7 +59,8 @@ export default function TripsPage() {
               return (
                 <li
                   key={trip.id}
-                  className="rounded-xl border bg-card px-4 py-4 shadow-sm"
+                  className="cursor-pointer rounded-xl border bg-card px-4 py-4 shadow-sm transition-colors active:bg-muted"
+                  onClick={() => setSelectedTrip(trip)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-medium leading-snug">{trip.name}</span>
@@ -92,6 +95,13 @@ export default function TripsPage() {
       </div>
 
       <CreateTripSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
+
+      <TripDetailSheet
+        trip={selectedTrip}
+        open={!!selectedTrip}
+        onOpenChange={(o) => { if (!o) setSelectedTrip(null); }}
+        onUpdated={() => { load(); setSelectedTrip(null); }}
+      />
     </div>
   );
 }
