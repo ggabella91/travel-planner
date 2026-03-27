@@ -128,7 +128,7 @@ export function AutocompleteInput({
                 e.preventDefault();
                 handleSelect(opt);
               }}
-              className={`flex w-full flex-col px-3 py-2 text-left transition-colors ${
+              className={`flex w-full cursor-pointer flex-col px-3 py-2 text-left transition-colors ${
                 i === highlighted ? "bg-accent" : "hover:bg-accent"
               }`}
             >
