@@ -21,6 +21,12 @@ A personal travel planning tool. Single user, no auth. Two core flows:
 - **IDs**: use `crypto.randomUUID()` for all new record IDs.
 - **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`). Planned additional vars: `UNSPLASH_ACCESS_KEY` (city photos).
 - **Git commits**: all lowercase, one-line, no co-authored trailer. Example: `feat: add place detail sheet`.
+- **Modular architecture** — hooks, components, and utilities live in feature-scoped subfolders, e.g. `src/app/trips/hooks/`, `src/app/trips/components/`. Do not create top-level `src/hooks/` or `src/utils/` preemptively. A shared common layer is a deliberate decision made when code is genuinely needed across multiple unrelated features.
+- **`src/components/ui/` is shadcn-only** — feature components (sheets, cards, forms) start in `src/components/` and migrate into their feature folder once the feature grows enough to warrant it.
+- **`src/lib/` is for shared non-UI code only** — DB client, schema, and cross-cutting helpers (e.g. `flags.ts`, `categories.ts`). Feature-specific logic belongs in the feature folder.
+- **Co-locate feature constants** — constants scoped to one feature (e.g. status color maps, label maps) belong in a `constants.ts` or `utils.ts` within the feature folder, not inlined in the component file.
+- **No barrel files** — don't create `index.ts` re-exports. Import directly from the source file.
+- **Types co-location** — feature-specific types live in the feature folder (inline or a `types.ts` alongside). Don't add a top-level `src/types/` unless a type is genuinely shared across multiple features.
 
 ## Data Model
 
