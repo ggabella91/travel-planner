@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { PlaceDetailSheet } from "@/components/place-detail-sheet";
-import { PlusIcon, MapPinIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import type { Place } from "@/lib/db/schema";
 import {
   CATEGORY_LABELS,
@@ -15,7 +15,7 @@ import {
   CATEGORY_CARD_ACCENT,
 } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
-import { STATUS_LABELS, STATUS_ICONS } from "@/app/places/constants";
+import { STATUS_LABELS, STATUS_ICONS, STATUS_DOT } from "@/app/places/constants";
 
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -69,90 +69,118 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
         <div className="mx-auto flex max-w-lg items-center px-5 py-3 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
           <h1 className="text-base font-semibold tracking-tight">Places</h1>
+          {places.length > 0 && (
+            <span className="ml-auto text-xs tabular-nums text-muted-foreground/60">
+              {places.length} saved
+            </span>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
         {places.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 pt-24 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-              <MapPinIcon className="size-8 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
+            <div className="relative flex size-24 items-center justify-center">
+              {/* Decorative rings */}
+              <div className="absolute inset-0 rounded-full border border-primary/10" />
+              <div className="absolute inset-3 rounded-full border border-primary/10" />
+              <div className="absolute inset-6 rounded-full bg-primary/6" />
+              {/* SVG graphic */}
+              <svg viewBox="0 0 48 48" className="relative size-12 text-primary/50" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                {/* Map pin */}
+                <path d="M24 4C17.4 4 12 9.4 12 16c0 9.6 12 24 12 24s12-14.4 12-24c0-6.6-5.4-12-12-12z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="24" cy="16" r="4" fill="currentColor" fillOpacity="0.5"/>
+                {/* Dotted orbit */}
+                <circle cx="24" cy="38" r="6" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="2 3"/>
+              </svg>
             </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-muted-foreground">No places saved yet</p>
-              <p className="text-xs text-muted-foreground/60">Tap + to add your first one</p>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm font-semibold text-foreground/70">No places saved yet</p>
+              <p className="text-xs text-muted-foreground/60">Tap + to start building your backlog</p>
             </div>
           </div>
         ) : (
           <>
             {/* Filters */}
-            <div className="flex flex-col gap-2.5 pb-5">
-              <FilterRow label="Status">
-                {["all", "backlog", "visited", "skipped"].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setFilterStatus(s)}
-                    className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      filterStatus === s
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="mr-1">{STATUS_ICONS[s]}</span>
-                    {STATUS_LABELS[s]}
-                  </button>
-                ))}
-              </FilterRow>
-
-              {categories.length > 0 && (
-                <FilterRow label="Type">
-                  <button
-                    onClick={() => setFilterCategory("all")}
-                    className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      filterCategory === "all"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    All
-                  </button>
-                  {categories.map((c) => (
+            <div className="flex flex-col pb-5">
+              <div className="py-2.5">
+                <FilterRow label="Status">
+                  {["all", "backlog", "visited", "skipped"].map((s) => (
                     <button
-                      key={c}
-                      onClick={() => setFilterCategory(c)}
+                      key={s}
+                      onClick={() => setFilterStatus(s)}
                       className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        filterCategory === c
-                          ? CATEGORY_ACTIVE_CHIP_COLORS[c] ?? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                      }`}
-                    >
-                      <span className="mr-1">{CATEGORY_ICONS[c]}</span>
-                      {CATEGORY_LABELS[c] ?? c}
-                    </button>
-                  ))}
-                </FilterRow>
-              )}
-
-              {cities.length > 1 && (
-                <FilterRow label="City">
-                  {[{ value: "all", label: "All" }, ...cities.map((c) => ({ value: c, label: c }))].map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setFilterCity(opt.value)}
-                      className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        filterCity === opt.value
+                        filterStatus === s
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                       }`}
                     >
-                      {opt.label}
+                      <span className="mr-1">{STATUS_ICONS[s]}</span>
+                      {STATUS_LABELS[s]}
                     </button>
                   ))}
                 </FilterRow>
+              </div>
+
+              {categories.length > 0 && (
+                <>
+                  <div className="h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
+                  <div className="py-2.5">
+                    <FilterRow label="Type">
+                      <button
+                        onClick={() => setFilterCategory("all")}
+                        className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                          filterCategory === "all"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        }`}
+                      >
+                        All
+                      </button>
+                      {categories.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setFilterCategory(c)}
+                          className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                            filterCategory === c
+                              ? CATEGORY_ACTIVE_CHIP_COLORS[c] ?? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          }`}
+                        >
+                          <span className="mr-1">{CATEGORY_ICONS[c]}</span>
+                          {CATEGORY_LABELS[c] ?? c}
+                        </button>
+                      ))}
+                    </FilterRow>
+                  </div>
+                </>
+              )}
+
+              {cities.length > 1 && (
+                <>
+                  <div className="h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
+                  <div className="py-2.5">
+                    <FilterRow label="City">
+                      {[{ value: "all", label: "All" }, ...cities.map((c) => ({ value: c, label: c }))].map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setFilterCity(opt.value)}
+                          className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                            filterCity === opt.value
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </FilterRow>
+                  </div>
+                </>
               )}
             </div>
 
@@ -163,7 +191,7 @@ export default function HomePage() {
                 {filteredPlaces.map((place) => (
                   <li
                     key={place.id}
-                    className={`cursor-pointer rounded-xl border bg-card shadow-sm transition-colors active:bg-muted overflow-hidden ${
+                    className={`cursor-pointer rounded-xl border bg-card shadow transition-all active:bg-muted overflow-hidden ${
                       place.category ? `border-l-4 ${CATEGORY_CARD_ACCENT[place.category] ?? ""}` : ""
                     }`}
                     onClick={() => setSelectedPlace(place)}
@@ -178,9 +206,17 @@ export default function HomePage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {getFlag(place.country)} {place.city}, {place.country}
-                      </p>
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[place.status] ?? "bg-zinc-300"}`} />
+                        <p className="text-xs text-muted-foreground">
+                          {getFlag(place.country)} {place.city}, {place.country}
+                        </p>
+                      </div>
+                      {place.status === "visited" && place.rating && (
+                        <p className="mt-1 text-xs tracking-wide text-amber-400">
+                          {"★".repeat(place.rating)}{"☆".repeat(5 - place.rating)}
+                        </p>
+                      )}
                       {place.notes && (
                         <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {place.notes}

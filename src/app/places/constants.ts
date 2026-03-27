@@ -1,3 +1,9 @@
+export const STATUS_DOT: Record<string, string> = {
+  backlog: "bg-sky-400",
+  visited: "bg-emerald-400",
+  skipped: "bg-zinc-300",
+};
+
 export const STATUS_LABELS: Record<string, string> = {
   all:     "All",
   backlog: "Backlog",
