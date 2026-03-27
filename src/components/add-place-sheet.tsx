@@ -20,26 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { CATEGORIES, SOURCES } from "@/app/places/constants";
+
 interface AddPlaceSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded: () => void;
 }
-
-const CATEGORIES = [
-  { value: "restaurant", label: "Restaurant" },
-  { value: "bar", label: "Bar" },
-  { value: "cafe", label: "Cafe" },
-  { value: "neighborhood", label: "Neighborhood" },
-  { value: "activity", label: "Activity" },
-  { value: "spot", label: "Spot" },
-];
-
-const SOURCES = [
-  { value: "instagram", label: "Instagram" },
-  { value: "reddit", label: "Reddit" },
-  { value: "friend", label: "Friend" },
-];
 
 export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProps) {
   const [loading, setLoading] = useState(false);

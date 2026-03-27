@@ -22,6 +22,7 @@ import {
 import { PencilIcon } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import type { Trip } from "@/lib/db/schema";
+import { STATUS_COLORS, STATUS_LABELS, STATUSES } from "@/app/trips/constants";
 
 interface TripDetailSheetProps {
   trip: Trip | null;
@@ -30,23 +31,6 @@ interface TripDetailSheetProps {
   onUpdated: () => void;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  planning: "bg-sky-100 text-sky-700 border-sky-200",
-  active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  done: "bg-muted text-muted-foreground border-border",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  planning: "Planning",
-  active: "Active",
-  done: "Done",
-};
-
-const STATUSES = [
-  { value: "planning", label: "Planning" },
-  { value: "active", label: "Active" },
-  { value: "done", label: "Done" },
-];
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });

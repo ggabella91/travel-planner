@@ -15,20 +15,7 @@ import {
   CATEGORY_CARD_ACCENT,
 } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
-
-const STATUS_LABELS: Record<string, string> = {
-  all: "All",
-  backlog: "Backlog",
-  visited: "Visited",
-  skipped: "Skipped",
-};
-
-const STATUS_ICONS: Record<string, string> = {
-  all: "✦",
-  backlog: "🔖",
-  visited: "✅",
-  skipped: "⏭️",
-};
+import { STATUS_LABELS, STATUS_ICONS } from "@/app/places/constants";
 
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (

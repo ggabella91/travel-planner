@@ -7,31 +7,8 @@ import { CreateTripSheet } from "@/components/create-trip-sheet";
 import { TripDetailSheet } from "@/components/trip-detail-sheet";
 import { PlusIcon, PlaneIcon } from "lucide-react";
 import type { Trip } from "@/lib/db/schema";
-
-const STATUS_COLORS: Record<string, string> = {
-  planning: "bg-sky-100 text-sky-700 border-sky-200",
-  active:   "bg-emerald-100 text-emerald-700 border-emerald-200",
-  done:     "bg-muted text-muted-foreground border-border",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  planning: "Planning",
-  active:   "Active",
-  done:     "Done",
-};
-
-const STATUS_ICONS: Record<string, string> = {
-  all:      "✦",
-  planning: "✈️",
-  active:   "🌍",
-  done:     "✅",
-};
-
-const STATUS_CARD_ACCENT: Record<string, string> = {
-  planning: "border-l-sky-400",
-  active:   "border-l-emerald-400",
-  done:     "border-l-border",
-};
+import { useCityPhoto } from "./hooks/use-city-photo";
+import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS, STATUS_CARD_ACCENT } from "./constants";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });

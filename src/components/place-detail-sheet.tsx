@@ -24,6 +24,7 @@ import type { Place } from "@/lib/db/schema";
 import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_COLORS } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { CATEGORIES, SOURCES, SOURCE_LABELS, STATUSES, RATINGS } from "@/app/places/constants";
 
 interface PlaceDetailSheetProps {
   place: Place | null;
@@ -32,34 +33,6 @@ interface PlaceDetailSheetProps {
   onUpdated: () => void;
 }
 
-const SOURCE_LABELS: Record<string, string> = {
-  instagram: "Instagram",
-  reddit: "Reddit",
-  friend: "Friend",
-};
-
-const CATEGORIES = [
-  { value: "restaurant", label: "Restaurant" },
-  { value: "bar", label: "Bar" },
-  { value: "cafe", label: "Cafe" },
-  { value: "neighborhood", label: "Neighborhood" },
-  { value: "activity", label: "Activity" },
-  { value: "spot", label: "Spot" },
-];
-
-const SOURCES = [
-  { value: "instagram", label: "Instagram" },
-  { value: "reddit", label: "Reddit" },
-  { value: "friend", label: "Friend" },
-];
-
-const STATUSES = [
-  { value: "backlog", label: "Backlog" },
-  { value: "visited", label: "Visited" },
-  { value: "skipped", label: "Skipped" },
-];
-
-const RATINGS = [1, 2, 3, 4, 5];
 
 export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: PlaceDetailSheetProps) {
   const [editing, setEditing] = useState(false);
