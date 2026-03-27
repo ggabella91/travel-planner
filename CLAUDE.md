@@ -20,6 +20,7 @@ A personal travel planning tool. Single user, no auth. Two core flows:
 - **API routes only** — use `/app/api/*/route.ts`. No Server Actions.
 - **IDs**: use `crypto.randomUUID()` for all new record IDs.
 - **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`).
+- **Git commits**: all lowercase, one-line, no co-authored trailer. Example: `feat: add place detail sheet`.
 
 ## Data Model
 

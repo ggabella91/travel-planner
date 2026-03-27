@@ -14,6 +14,7 @@
 - [x] Inter font
 - [x] City + country autocomplete (REST Countries + Nominatim proxy)
 - [x] Flag emoji on place cards
+- [x] Trips UI refresh — status filter chips, card accent borders, status icons on badges, notes preview
 
 ## Up Next
 
