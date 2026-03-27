@@ -16,9 +16,9 @@ export async function GET(request: Request) {
       await res.json();
 
     const results = data.slice(0, 8).map((c) => ({
-      label: c.name.common,
+      label: `${c.flag} ${c.name.common}`,
       value: c.name.common,
-      sublabel: c.flag,
+      sublabel: "",
       meta: { flag: c.flag },
     }));
 

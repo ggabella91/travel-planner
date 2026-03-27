@@ -4,6 +4,10 @@ interface NominatimResult {
     city?: string;
     town?: string;
     village?: string;
+    state?: string;
+    province?: string;
+    region?: string;
+    county?: string;
     country?: string;
   };
 }
@@ -39,22 +43,33 @@ export async function GET(request: Request) {
     }> = [];
 
     for (const item of data) {
-      const label =
+      // only include actual populated places, not counties/regions
+      const city =
         item.address?.city ||
         item.address?.town ||
-        item.address?.village ||
-        item.name;
+        item.address?.village;
 
-      if (!label) continue;
-      if (seen.has(label)) continue;
-      seen.add(label);
+      if (!city) continue;
+
+      const state =
+        item.address?.state ||
+        item.address?.province ||
+        item.address?.region ||
+        item.address?.county ||
+        "";
 
       const country = item.address?.country ?? "";
 
+      const dedupeKey = [city, state, country].join("|");
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+
+      const sublabelParts = [state, country].filter(Boolean);
+
       results.push({
-        label,
-        value: label,
-        sublabel: country,
+        label: city,
+        value: city,
+        sublabel: sublabelParts.join(", "),
         meta: { country },
       });
 

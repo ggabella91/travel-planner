@@ -2,25 +2,25 @@
 
 ## Done
 
-- [x] Next.js project scaffolded
-- [x] shadcn/ui initialized (Tailwind v4, neutral theme)
-- [x] shadcn components: `button`, `sheet`, `input`, `label`, `select`, `badge`
-- [x] Drizzle ORM + `postgres` driver installed
-- [x] `drizzle.config.ts` at project root
-- [x] DB schema: `places`, `trips`, `trip_places` (`src/lib/db/schema.ts`)
-- [x] DB connection at `src/lib/db/index.ts`
-- [x] npm scripts: `db:generate`, `db:migrate`, `db:studio` (use `--env-file=.env.local`)
-- [x] Supabase project connected, migrations applied
-- [x] `GET /api/places` + `POST /api/places`
-- [x] `AddPlaceSheet` component (bottom sheet, mobile-friendly)
-- [x] Home page (`/`) — backlog list with empty state
+- [x] Next.js project scaffolded + Supabase connected, migrations applied
+- [x] shadcn/ui (Tailwind v4) + Drizzle ORM + `postgres` driver
+- [x] DB schema: `places`, `trips`, `trip_places`
+- [x] `GET/POST /api/places`, `PATCH /api/places/[id]`
+- [x] `GET/POST /api/trips`, `PATCH /api/trips/[id]`
+- [x] Places backlog — add, list, filter (status/category/city), detail + edit
+- [x] Trip list — create, detail + edit
+- [x] Bottom nav (Places | Trips)
+- [x] Visual refresh — category icons/emoji, card accent borders, filter row labels
+- [x] Inter font
+- [x] City + country autocomplete (REST Countries + Nominatim proxy)
+- [x] Flag emoji on place cards
 
 ## Up Next
 
-- [ ] Backlog filters (city, category, status)
-- [ ] `POST /api/trips` + trip creation UI
-- [ ] Trip detail view (`/trips/[id]`) — show matching backlog places, pull into trip
-- [ ] Mark visited flow (status update + optional rating/note)
+- [ ] Trip detail view (`/trips/[id]`) — show backlog places matching city, pull into trip via `trip_places`
+- [ ] Mark visited — quick-action from place card (status + optional rating)
+- [ ] City photos on trip cards
+- [ ] Illustrated empty states (SVG)
 - [ ] PWA manifest
 
 ## Project Structure
@@ -29,14 +29,22 @@
 src/
 ├── app/
 │   ├── api/
-│   │   └── places/route.ts
-│   ├── trips/[id]/        ← next to build
+│   │   ├── places/route.ts + [id]/route.ts
+│   │   ├── trips/route.ts + [id]/route.ts
+│   │   └── autocomplete/countries + cities
+│   ├── trips/
+│   │   └── page.tsx
 │   ├── layout.tsx
-│   └── page.tsx           ← backlog home
+│   └── page.tsx              ← backlog home
 ├── components/
-│   ├── ui/                ← shadcn components
-│   └── add-place-sheet.tsx
-└── lib/db/
-    ├── index.ts
-    └── schema.ts
+│   ├── ui/                   ← shadcn + autocomplete-input
+│   ├── add-place-sheet.tsx
+│   ├── place-detail-sheet.tsx
+│   ├── create-trip-sheet.tsx
+│   ├── trip-detail-sheet.tsx
+│   └── bottom-nav.tsx
+└── lib/
+    ├── db/
+    ├── categories.ts
+    └── flags.ts
 ```

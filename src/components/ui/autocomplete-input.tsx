@@ -128,14 +128,14 @@ export function AutocompleteInput({
                 e.preventDefault();
                 handleSelect(opt);
               }}
-              className={`flex w-full items-baseline gap-2 px-3 py-2 text-left text-sm transition-colors ${
+              className={`flex w-full flex-col px-3 py-2 text-left transition-colors ${
                 i === highlighted ? "bg-accent" : "hover:bg-accent"
               }`}
             >
+              <span className="text-sm font-medium leading-5">{opt.label}</span>
               {opt.sublabel && (
-                <span className="shrink-0 text-base leading-none">{opt.sublabel}</span>
+                <span className="text-xs leading-4 text-muted-foreground">{opt.sublabel}</span>
               )}
-              <span className="font-medium">{opt.label}</span>
             </button>
           ))}
         </div>
