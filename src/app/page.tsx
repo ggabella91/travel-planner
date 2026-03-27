@@ -1,66 +1,81 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useEffect, useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AddPlaceSheet } from "@/components/add-place-sheet";
+import { PlusIcon } from "lucide-react";
+import type { Place } from "@/lib/db/schema";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  restaurant: "Restaurant",
+  bar: "Bar",
+  cafe: "Cafe",
+  neighborhood: "Neighborhood",
+  activity: "Activity",
+  spot: "Spot",
+};
+
+export default function HomePage() {
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    const res = await fetch("/api/places");
+    if (res.ok) setPlaces(await res.json());
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3">
+        <h1 className="text-base font-semibold">Places</h1>
+        <Button size="sm" onClick={() => setSheetOpen(true)}>
+          <PlusIcon className="size-4" />
+          Add
+        </Button>
+      </header>
+
+      <main className="px-4 py-4">
+        {places.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 pt-20 text-center text-muted-foreground">
+            <p className="text-sm">No places yet.</p>
+            <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
+              Add your first place
+            </Button>
+          </div>
+        ) : (
+          <ul className="flex flex-col divide-y">
+            {places.map((place) => (
+              <li key={place.id} className="flex flex-col gap-1 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-medium leading-snug">{place.name}</span>
+                  {place.category && (
+                    <Badge variant="secondary" className="shrink-0 text-xs">
+                      {CATEGORY_LABELS[place.category] ?? place.category}
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {place.city}, {place.country}
+                </span>
+                {place.notes && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{place.notes}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
+
+      <AddPlaceSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onAdded={load}
+      />
     </div>
   );
 }
