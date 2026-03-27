@@ -18,11 +18,25 @@
 
 ## Up Next
 
+### Core features
 - [ ] Trip detail view (`/trips/[id]`) — show backlog places matching city, pull into trip via `trip_places`
 - [ ] Mark visited — quick-action from place card (status + optional rating)
-- [ ] City photos on trip cards
-- [ ] Illustrated empty states (SVG)
-- [ ] PWA manifest
+- [ ] `GET/POST/DELETE /api/trips/[id]/places` — manage `trip_places` join table
+
+### UI polish
+- [ ] City hero photos on trip cards — proxy Unsplash API (`/api/photos/city?q=`) with `UNSPLASH_ACCESS_KEY` env var; cache response in-memory or via `next/cache` to stay within free tier (50 req/hr)
+- [ ] Illustrated empty states (SVG) — one for places backlog, one for trips list, one for trip detail
+- [ ] Skeleton loaders on list pages while fetch is in-flight
+
+### PWA
+- [ ] `public/manifest.json` — name, short_name, icons, theme_color, display: standalone
+- [ ] Meta tags in `layout.tsx` — `apple-mobile-web-app-capable`, viewport fit=cover
+- [ ] App icons (192×192, 512×512) in `public/`
+
+### Nice-to-haves (post-MVP)
+- [ ] Swipe-to-delete / swipe-to-visit on place cards
+- [ ] Drag-to-reorder days in trip detail
+- [ ] Share trip as read-only link
 
 ## Project Structure
 
