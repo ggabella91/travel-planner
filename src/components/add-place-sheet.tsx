@@ -76,11 +76,12 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl px-4">
-        <SheetHeader className="px-0 pt-2 pb-4">
-          <SheetTitle>Add a place</SheetTitle>
-        </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl [padding-bottom:max(1rem,env(safe-area-inset-bottom))]">
+        <div className="px-5">
+          <SheetHeader className="px-0 pt-3 pb-5">
+            <SheetTitle>Add a place</SheetTitle>
+          </SheetHeader>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">Name *</Label>
             <Input
@@ -172,12 +173,13 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
             />
           </div>
 
-          <SheetFooter className="px-0 pb-4">
+          <SheetFooter className="px-0 pt-2 pb-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Saving…" : "Save place"}
             </Button>
           </SheetFooter>
         </form>
+        </div>
       </SheetContent>
     </Sheet>
   );
