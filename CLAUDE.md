@@ -42,12 +42,12 @@ Three tables in `src/lib/db/schema.ts`:
 - Auth.js v5 with Google provider. Config in `src/auth.ts`.
 - Route handler at `src/app/api/auth/[...nextauth]/route.ts`.
 - Middleware in `src/middleware.ts` — protects all routes; unauthenticated users are redirected to `/login`. Authenticated users on `/login` are redirected to `/`.
-- `signIn` callback rejects any email that doesn't match `ALLOWED_EMAIL` env var — hard gate for single-user access.
+- Any Google account can sign in — no email allowlist.
 - Login page at `src/app/login/page.tsx` — uses a Server Action (only exception to the no-Server-Actions rule).
 
 ## Key Design Decisions
 
-- Single-user — gated by `ALLOWED_EMAIL` env var matching the Google account email.
+- Open to any Google account — no email allowlist. Data is shared across all users.
 - No map view in MVP — use the `url` field to link to Google Maps.
 - `tags` and `cities` stored as JSON strings — no extra tables needed at this scale.
 - `day` is nullable on `trip_places` — unscheduled is a first-class state.
@@ -62,7 +62,7 @@ Three tables in `src/lib/db/schema.ts`:
 
 ## MVP Scope
 
-**Done**: quick-add place, backlog list with filters, trip creation, trip view, Google Sign-In, city/place hero photos, modal detail views, Vercel deployment.
+**Done**: quick-add place, backlog list with filters, trip creation, trip view, Google Sign-In, city/place hero photos, modal detail views, PWA manifest, OG social preview image, Vercel deployment.
 
 **Up next**: PWA manifest (install to home screen).
 

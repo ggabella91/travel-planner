@@ -12,7 +12,7 @@ A personal travel planning tool for saving places you want to visit and organizi
 - **City & place photos** — hero images from Unsplash on trip cards and place/trip detail modals
 - **Edit anywhere** — tap any place or trip to view details and edit inline
 - **City & country autocomplete** — powered by OpenStreetMap (Nominatim) and REST Countries, with flag emoji and state/province context
-- **Google Sign-In** — single-user auth gated by email address
+- **Google Sign-In** — any Google account can sign in
 - **Mobile-first** — bottom nav, bottom sheets, iOS safe area support, fast capture
 
 ## Tech Stack
@@ -36,7 +36,10 @@ npm install
 
 ### 2. Create a Supabase project
 
-Go to [supabase.com](https://supabase.com), create a free project, then find your connection string under **Project Settings → Database → Connection string (URI)**.
+Go to [supabase.com](https://supabase.com), create a free project, then find your connection strings under **Project Settings → Database**:
+
+- **Local dev**: use the direct connection URI (port 5432)
+- **Production (Vercel)**: use the **Transaction pooler** URI (port 6543) — required because Vercel runs on IPv4 and Supabase's direct connection is IPv6-only
 
 ### 3. Set up Google OAuth
 
@@ -51,7 +54,7 @@ Go to [supabase.com](https://supabase.com), create a free project, then find you
 Create a `.env.local` file at the project root:
 
 ```env
-# Database
+# Database (use direct connection for local dev, pooler URL for prod)
 DATABASE_URL=postgresql://postgres:[PASSWORD]@[PROJECT-REF].supabase.co:5432/postgres
 
 # Unsplash (get a free key at unsplash.com/developers)
@@ -61,9 +64,6 @@ UNSPLASH_ACCESS_KEY=your_unsplash_access_key
 AUTH_SECRET=your_auth_secret
 AUTH_GOOGLE_ID=your_google_client_id
 AUTH_GOOGLE_SECRET=your_google_client_secret
-
-# Single-user gate — only this email can log in
-ALLOWED_EMAIL=your@gmail.com
 ```
 
 ### 5. Run database migrations
@@ -130,7 +130,8 @@ src/
 
 ## Notes
 
-- Single-user — access is gated by `ALLOWED_EMAIL`. Only that Google account can log in.
+- Any Google account can sign in. Data is shared across all users.
 - No map view — use the `url` field to link to Google Maps or similar.
 - Autocomplete proxies through Next.js API routes to satisfy Nominatim's `User-Agent` requirement and avoid CORS issues.
 - Unsplash photos are cached 24hr server-side to stay within the free tier (50 req/hr).
+- Dev and prod share the same Supabase database by default — use separate projects to isolate environments.
