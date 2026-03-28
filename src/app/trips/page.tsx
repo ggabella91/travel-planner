@@ -1,30 +1,39 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
 import { TripDetailSheet } from "@/components/trip-detail-sheet";
-import { PlusIcon } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { PlusIcon } from "lucide-react";
 import type { Trip } from "@/lib/db/schema";
 import { STATUS_LABELS, STATUS_ICONS } from "./constants";
 import { TripCard } from "./components/trip-card";
+import { useTrips } from "./hooks/use-trips";
+
+function TripsSkeleton() {
+  return (
+    <ul className="flex flex-col gap-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <li key={i} className="rounded-xl border bg-card shadow overflow-hidden">
+          <Skeleton className="h-32 w-full rounded-none" />
+          <div className="px-4 py-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-2 h-3 w-28" />
+            <Skeleton className="mt-2 h-3 w-20" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function TripsPage() {
-  const [trips, setTrips] = useState<Trip[]>([]);
+  const { trips, loading, reload } = useTrips();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
-
-  const load = useCallback(() => {
-    fetch("/api/trips")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: Trip[] | null) => { if (data) setTrips(data); });
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const filteredTrips = useMemo(
     () => trips.filter((t) => filterStatus === "all" || t.status === filterStatus),
@@ -50,20 +59,17 @@ export default function TripsPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
-        {trips.length === 0 ? (
+        {loading ? (
+          <TripsSkeleton />
+        ) : trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
             <div className="relative flex size-24 items-center justify-center">
-              {/* Decorative rings */}
               <div className="absolute inset-0 rounded-full border border-primary/10" />
               <div className="absolute inset-3 rounded-full border border-primary/10" />
               <div className="absolute inset-6 rounded-full bg-primary/6" />
-              {/* SVG graphic */}
               <svg viewBox="0 0 48 48" className="relative size-12 text-primary/50" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                {/* Dotted flight arc */}
                 <path d="M6 36 Q24 8 42 28" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.5" strokeDasharray="3 3" fill="none"/>
-                {/* Plane */}
                 <path d="M28 18l-4-4-2 2 2 3-8 5 1 2 5-1 2 4 2-1-1-5 3-2z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="0.5"/>
-                {/* Destination dot */}
                 <circle cx="42" cy="28" r="2" fill="currentColor" fillOpacity="0.4"/>
                 <circle cx="42" cy="28" r="4" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1"/>
               </svg>
@@ -126,13 +132,13 @@ export default function TripsPage() {
         </Button>
       </div>
 
-      <CreateTripSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
+      <CreateTripSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} />
 
       <TripDetailSheet
         trip={selectedTrip}
         open={!!selectedTrip}
         onOpenChange={(o) => { if (!o) setSelectedTrip(null); }}
-        onUpdated={() => { load(); setSelectedTrip(null); }}
+        onUpdated={() => { reload(); setSelectedTrip(null); }}
       />
     </div>
   );

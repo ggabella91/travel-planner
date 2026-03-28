@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { PlaceDetailSheet } from "@/components/place-detail-sheet";
-import { PlusIcon } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { PlusIcon } from "lucide-react";
 import type { Place } from "@/lib/db/schema";
 import {
   CATEGORY_LABELS,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
 import { STATUS_LABELS, STATUS_ICONS, STATUS_DOT } from "@/app/places/constants";
+import { usePlaces } from "@/app/places/hooks/use-places";
 
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -31,22 +33,33 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
+function PlacesSkeleton() {
+  return (
+    <ul className="flex flex-col gap-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <li key={i} className="rounded-xl border bg-card shadow overflow-hidden">
+          <div className="px-4 py-4">
+            <div className="flex items-start justify-between gap-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="mt-2.5 h-3 w-36" />
+            <Skeleton className="mt-3 h-3 w-full" />
+            <Skeleton className="mt-1.5 h-3 w-3/4" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function HomePage() {
-  const [places, setPlaces] = useState<Place[]>([]);
+  const { places, loading, reload } = usePlaces();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterCity, setFilterCity] = useState("all");
-
-  const load = useCallback(async () => {
-    const res = await fetch("/api/places");
-    if (res.ok) setPlaces(await res.json());
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const cities = useMemo(
     () => [...new Set(places.map((p) => p.city))].sort(),
@@ -86,19 +99,17 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
-        {places.length === 0 ? (
+        {loading ? (
+          <PlacesSkeleton />
+        ) : places.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
             <div className="relative flex size-24 items-center justify-center">
-              {/* Decorative rings */}
               <div className="absolute inset-0 rounded-full border border-primary/10" />
               <div className="absolute inset-3 rounded-full border border-primary/10" />
               <div className="absolute inset-6 rounded-full bg-primary/6" />
-              {/* SVG graphic */}
               <svg viewBox="0 0 48 48" className="relative size-12 text-primary/50" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                {/* Map pin */}
                 <path d="M24 4C17.4 4 12 9.4 12 16c0 9.6 12 24 12 24s12-14.4 12-24c0-6.6-5.4-12-12-12z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.5"/>
                 <circle cx="24" cy="16" r="4" fill="currentColor" fillOpacity="0.5"/>
-                {/* Dotted orbit */}
                 <circle cx="24" cy="38" r="6" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="2 3"/>
               </svg>
             </div>
@@ -247,13 +258,13 @@ export default function HomePage() {
         </Button>
       </div>
 
-      <AddPlaceSheet open={addOpen} onOpenChange={setAddOpen} onAdded={load} />
+      <AddPlaceSheet open={addOpen} onOpenChange={setAddOpen} onAdded={reload} />
 
       <PlaceDetailSheet
         place={selectedPlace}
         open={!!selectedPlace}
         onOpenChange={(open) => { if (!open) setSelectedPlace(null); }}
-        onUpdated={() => { load(); setSelectedPlace(null); }}
+        onUpdated={() => { reload(); setSelectedPlace(null); }}
       />
     </div>
   );
