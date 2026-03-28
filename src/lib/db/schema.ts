@@ -2,6 +2,7 @@ import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const places = pgTable("places", {
   id: text("id").primaryKey(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   city: text("city").notNull(),
   state: text("state"),
@@ -19,6 +20,7 @@ export const places = pgTable("places", {
 
 export const trips = pgTable("trips", {
   id: text("id").primaryKey(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   cities: text("cities").notNull(), // JSON array of city strings
   startDate: text("start_date"), // nullable ISO date string

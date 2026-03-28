@@ -1,9 +1,13 @@
 import { db } from "@/lib/db";
 import { places } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
 
-export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/places/[id]">) {
+export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
   const { id } = await ctx.params;
   const body = await req.json();
   const { name, city, state, country, category, notes, source, url, status, rating } = body;
@@ -27,7 +31,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/places/[id
       rating: rating ? Number(rating) : null,
       updatedAt: new Date(),
     })
-    .where(eq(places.id, id))
+    .where(and(eq(places.id, id), eq(places.userId, session.user.email)))
     .returning();
 
   if (!place) return Response.json({ error: "Not found" }, { status: 404 });
