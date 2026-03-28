@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
 import { TripDetailSheet } from "@/components/trip-detail-sheet";
 import { PlusIcon } from "lucide-react";
+import { SignOutButton } from "@/components/sign-out-button";
 import type { Trip } from "@/lib/db/schema";
 import { STATUS_LABELS, STATUS_ICONS } from "./constants";
 import { TripCard } from "./components/trip-card";
@@ -38,10 +39,13 @@ export default function TripsPage() {
         <div className="mx-auto flex max-w-lg items-center px-5 py-3 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
           <h1 className="text-base font-semibold tracking-tight">Trips</h1>
           {trips.length > 0 && (
-            <span className="ml-auto text-xs tabular-nums text-muted-foreground/60">
+            <span className="ml-2 text-xs tabular-nums text-muted-foreground/60">
               {trips.length} trip{trips.length !== 1 ? "s" : ""}
             </span>
           )}
+          <div className="ml-auto">
+            <SignOutButton />
+          </div>
         </div>
       </header>
 

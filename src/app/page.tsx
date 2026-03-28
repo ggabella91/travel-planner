@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { PlaceDetailSheet } from "@/components/place-detail-sheet";
 import { PlusIcon } from "lucide-react";
+import { SignOutButton } from "@/components/sign-out-button";
 import type { Place } from "@/lib/db/schema";
 import {
   CATEGORY_LABELS,
@@ -74,10 +75,13 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-lg items-center px-5 py-3 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
           <h1 className="text-base font-semibold tracking-tight">Places</h1>
           {places.length > 0 && (
-            <span className="ml-auto text-xs tabular-nums text-muted-foreground/60">
+            <span className="ml-2 text-xs tabular-nums text-muted-foreground/60">
               {places.length} saved
             </span>
           )}
+          <div className="ml-auto">
+            <SignOutButton />
+          </div>
         </div>
       </header>
 
