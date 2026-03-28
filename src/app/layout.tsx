@@ -10,7 +10,16 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Travel Planner",
-  description: "Your personal places backlog",
+  description: "Your personal places backlog and trip planner",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Travel Planner",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -20,6 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="theme-color" content="#5046e4" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
       <body>
         {/* Ambient gradient blobs */}
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
