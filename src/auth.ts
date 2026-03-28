@@ -11,9 +11,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return !!session?.user;
     },
     async signIn({ user }) {
-      const allowed = process.env.ALLOWED_EMAIL;
+      const allowed = process.env.ALLOWED_EMAILS;
       if (!allowed) return false;
-      return user.email === allowed;
+      const list = allowed.split(",").map((e) => e.trim().toLowerCase());
+      return list.includes((user.email ?? "").toLowerCase());
     },
   },
 });
