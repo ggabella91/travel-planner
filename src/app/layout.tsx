@@ -20,6 +20,18 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
+  openGraph: {
+    title: "Travel Planner",
+    description: "Your personal places backlog and trip planner",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Travel Planner",
+    description: "Your personal places backlog and trip planner",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
