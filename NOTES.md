@@ -40,6 +40,9 @@
 - [ ] Mark visited — quick-action from place card (status + optional rating)
 - [ ] `GET/POST/DELETE /api/trips/[id]/places` — manage `trip_places` join table
 
+### Infrastructure
+- [ ] Separate dev and prod Supabase projects so local dev data doesn't pollute production
+
 ### Nice-to-haves
 - [ ] Swipe-to-delete / swipe-to-visit on place cards
 - [ ] Drag-to-reorder days in trip detail
