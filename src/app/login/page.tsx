@@ -49,9 +49,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground/60">
-          Access is restricted to authorized users only.
-        </p>
       </div>
     </div>
   );
