@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 
 import { CATEGORIES, SOURCES } from "@/app/places/constants";
+import { toast } from "@/lib/toast";
 
 interface AddPlaceSheetProps {
   open: boolean;
@@ -58,6 +59,9 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
       setForm({ name: "", city: "", state: "", country: "", category: "", source: "", notes: "", url: "" });
       onOpenChange(false);
       onAdded();
+      toast.success("Place saved");
+    } catch {
+      toast.error("Failed to save — try again");
     } finally {
       setLoading(false);
     }

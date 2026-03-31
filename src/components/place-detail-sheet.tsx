@@ -27,6 +27,7 @@ import { getFlag } from "@/lib/flags";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { CATEGORIES, SOURCES, SOURCE_LABELS, STATUSES, RATINGS } from "@/app/places/constants";
 import { usePlacePhoto } from "@/app/places/hooks/use-place-photo";
+import { toast } from "@/lib/toast";
 
 interface PlaceDetailSheetProps {
   place: Place | null;
@@ -82,6 +83,9 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       setEditing(false);
       setForm({});
       onUpdated();
+      toast.success("Place updated");
+    } catch {
+      toast.error("Failed to save — try again");
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/lib/toast";
 
 interface CreateTripSheetProps {
   open: boolean;
@@ -40,6 +41,9 @@ export function CreateTripSheet({ open, onOpenChange, onCreated }: CreateTripShe
       setForm({ name: "", city: "", startDate: "", endDate: "" });
       onOpenChange(false);
       onCreated();
+      toast.success("Trip created");
+    } catch {
+      toast.error("Failed to create trip — try again");
     } finally {
       setLoading(false);
     }

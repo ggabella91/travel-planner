@@ -25,6 +25,7 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import type { Trip } from "@/lib/db/schema";
 import { STATUS_COLORS, STATUS_LABELS, STATUSES } from "@/app/trips/constants";
 import { useCityPhoto } from "@/app/trips/hooks/use-city-photo";
+import { toast } from "@/lib/toast";
 
 interface TripDetailSheetProps {
   trip: Trip | null;
@@ -89,6 +90,9 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
       if (!res.ok) throw new Error("Failed to save");
       setEditing(false);
       onUpdated();
+      toast.success("Trip updated");
+    } catch {
+      toast.error("Failed to save — try again");
     } finally {
       setLoading(false);
     }

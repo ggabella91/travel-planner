@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const inter = Inter({
@@ -55,6 +56,7 @@ export default function RootLayout({
         </div>
         {children}
         <BottomNav />
+        <Toaster />
       </body>
     </html>
   );
