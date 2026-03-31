@@ -20,7 +20,7 @@ A personal travel planning tool. Single user, Google Sign-In auth. Two core flow
 
 - **API routes only** — use `/app/api/*/route.ts`. No Server Actions, with one exception: the login page uses a Server Action to call `signIn("google")` — this is required by Auth.js.
 - **IDs**: use `crypto.randomUUID()` for all new record IDs.
-- **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`). Required vars: `DATABASE_URL`, `UNSPLASH_ACCESS_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ALLOWED_EMAIL`.
+- **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`). Required vars: `DATABASE_URL`, `UNSPLASH_ACCESS_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
 - **Git commits**: all lowercase, one-line, no co-authored trailer. Example: `feat: add place detail sheet`.
 - **Modular architecture** — hooks, components, and utilities live in feature-scoped subfolders, e.g. `src/app/trips/hooks/`, `src/app/trips/components/`. Do not create top-level `src/hooks/` or `src/utils/` preemptively. A shared common layer is a deliberate decision made when code is genuinely needed across multiple unrelated features.
 - **`src/components/ui/` is shadcn-only** — feature components (sheets, cards, forms) start in `src/components/` and migrate into their feature folder once the feature grows enough to warrant it.
@@ -47,7 +47,7 @@ Three tables in `src/lib/db/schema.ts`:
 
 ## Key Design Decisions
 
-- Open to any Google account — no email allowlist. Data is shared across all users.
+- Open to any Google account — no email allowlist. Each user's data is isolated by their Google email (userId).
 - No map view in MVP — use the `url` field to link to Google Maps.
 - `tags` and `cities` stored as JSON strings — no extra tables needed at this scale.
 - `day` is nullable on `trip_places` — unscheduled is a first-class state.
@@ -62,8 +62,8 @@ Three tables in `src/lib/db/schema.ts`:
 
 ## MVP Scope
 
-**Done**: quick-add place, backlog list with filters, trip creation, trip view, Google Sign-In, city/place hero photos, modal detail views, PWA manifest, OG social preview image, Vercel deployment.
+**Done**: quick-add place, backlog list with filters, trip creation, trip view, Google Sign-In, per-user data isolation, city/place hero photos, modal detail views, skeleton loading states, module-level data caching, toast notifications, delete places/trips, PWA manifest, OG social preview image, Vercel deployment.
 
-**Up next**: PWA manifest (install to home screen).
+**Up next (tracked in Beads)**: trip-places UI (wire up join table), search, quick status actions, day-by-day itinerary, tags, trip summary stats.
 
-**Skipping**: map view, offline sync, sharing, recommendation engine, calendar sync, multiple users.
+**Skipping**: map view, offline sync, sharing, recommendation engine, calendar sync.

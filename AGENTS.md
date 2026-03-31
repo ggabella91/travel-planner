@@ -8,10 +8,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ### Dynamic route params must be awaited
 `params` is a Promise in Next.js 16 dynamic routes. Always `await ctx.params`:
 ```ts
-export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/places/[id]">) {
+export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
 ```
-Use the `RouteContext<"/api/path/[param]">` helper (defined locally in each route file) for typed params.
+Type the context inline — do not use a `RouteContext` generic helper.
 
 ### shadcn/ui here uses @base-ui/react, NOT Radix
 The component primitives are from `@base-ui/react`. APIs differ from Radix. In particular:

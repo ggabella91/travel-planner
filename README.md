@@ -10,10 +10,11 @@ A personal travel planning tool for saving places you want to visit and organizi
 - **Filters** — filter your backlog by status, category, and city
 - **Trips** — create and manage trips with name, cities, dates, and status
 - **City & place photos** — hero images from Unsplash on trip cards and place/trip detail modals
-- **Edit anywhere** — tap any place or trip to view details and edit inline
+- **Edit & delete** — tap any place or trip to view, edit, or delete with confirmation
 - **City & country autocomplete** — powered by OpenStreetMap (Nominatim) and REST Countries, with flag emoji and state/province context
+- **Per-user data isolation** — each Google account sees only their own places and trips
 - **Google Sign-In** — any Google account can sign in
-- **Mobile-first** — bottom nav, bottom sheets, iOS safe area support, fast capture
+- **Mobile-first** — bottom nav, bottom sheets, skeleton loading, toast feedback, iOS safe area support
 
 ## Tech Stack
 
@@ -38,8 +39,8 @@ npm install
 
 Go to [supabase.com](https://supabase.com), create a free project, then find your connection strings under **Project Settings → Database**:
 
-- **Local dev**: use the direct connection URI (port 5432)
-- **Production (Vercel)**: use the **Transaction pooler** URI (port 6543) — required because Vercel runs on IPv4 and Supabase's direct connection is IPv6-only
+- **Local dev**: create a separate Supabase project for dev and use its **Transaction pooler** URI (port 6543)
+- **Production (Vercel)**: use your prod project's **Transaction pooler** URI (port 6543) — required because Vercel runs on IPv4 and Supabase's direct connection is IPv6-only
 
 ### 3. Set up Google OAuth
 
@@ -96,18 +97,18 @@ src/
 │   ├── api/
 │   │   ├── auth/[...nextauth]/  # Auth.js OAuth handler
 │   │   ├── places/              # GET, POST /api/places
-│   │   ├── places/[id]/         # PATCH /api/places/[id]
+│   │   │   ├── places/[id]/         # PATCH, DELETE /api/places/[id]
 │   │   ├── trips/               # GET, POST /api/trips
-│   │   ├── trips/[id]/          # PATCH /api/trips/[id]
+│   │   ├── trips/[id]/          # PATCH, DELETE /api/trips/[id]
 │   │   ├── autocomplete/        # City + country search proxies
 │   │   └── photos/city/         # Unsplash photo proxy (24hr cache)
 │   ├── login/                   # Login page (Google Sign-In)
 │   ├── places/
 │   │   ├── constants.ts
-│   │   └── hooks/use-place-photo.ts
+│   │   └── hooks/           # use-places.ts, use-place-photo.ts
 │   ├── trips/
-│   │   ├── components/trip-card.tsx
-│   │   ├── hooks/use-city-photo.ts
+│   │   ├── components/      # trip-card.tsx
+│   │   ├── hooks/           # use-trips.ts, use-city-photo.ts
 │   │   ├── constants.ts
 │   │   └── page.tsx
 │   ├── globals.css
@@ -116,22 +117,24 @@ src/
 ├── auth.ts                      # Auth.js config
 ├── middleware.ts                 # Route protection
 ├── components/
-│   ├── ui/                      # shadcn components + modal + autocomplete
+│   ├── ui/                      # shadcn primitives: button, sheet, modal, select, skeleton, toaster, confirm-dialog…
 │   ├── add-place-sheet.tsx
 │   ├── place-detail-sheet.tsx
 │   ├── create-trip-sheet.tsx
 │   ├── trip-detail-sheet.tsx
+│   ├── sign-out-button.tsx
 │   └── bottom-nav.tsx
 └── lib/
     ├── db/                      # Drizzle client + schema
     ├── categories.ts            # Category labels, icons, colors
-    └── flags.ts                 # Country name → flag emoji
+    ├── flags.ts                 # Country name → flag emoji
+    └── toast.ts                 # Global toast manager
 ```
 
 ## Notes
 
-- Any Google account can sign in. Data is shared across all users.
+- Any Google account can sign in. Each user's data is fully isolated by their Google email.
 - No map view — use the `url` field to link to Google Maps or similar.
 - Autocomplete proxies through Next.js API routes to satisfy Nominatim's `User-Agent` requirement and avoid CORS issues.
 - Unsplash photos are cached 24hr server-side to stay within the free tier (50 req/hr).
-- Dev and prod share the same Supabase database by default — use separate projects to isolate environments.
+- Use separate Supabase projects for dev and prod to keep data isolated.
