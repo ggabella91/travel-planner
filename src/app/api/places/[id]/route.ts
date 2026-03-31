@@ -38,3 +38,19 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   return Response.json(place);
 }
+
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await ctx.params;
+
+  const [deleted] = await db
+    .delete(places)
+    .where(and(eq(places.id, id), eq(places.userId, session.user.email)))
+    .returning();
+
+  if (!deleted) return Response.json({ error: "Not found" }, { status: 404 });
+
+  return new Response(null, { status: 204 });
+}

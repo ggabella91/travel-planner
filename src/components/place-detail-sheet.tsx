@@ -28,6 +28,7 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { CATEGORIES, SOURCES, SOURCE_LABELS, STATUSES, RATINGS } from "@/app/places/constants";
 import { usePlacePhoto } from "@/app/places/hooks/use-place-photo";
 import { toast } from "@/lib/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface PlaceDetailSheetProps {
   place: Place | null;
@@ -39,6 +40,8 @@ interface PlaceDetailSheetProps {
 export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: PlaceDetailSheetProps) {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Partial<Place>>({});
 
   const photo = usePlacePhoto(place?.name, place?.city);
@@ -88,6 +91,22 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       toast.error("Failed to save — try again");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!place) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/places/${place.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setConfirmDelete(false);
+      onUpdated();
+      toast.success("Place deleted");
+    } catch {
+      toast.error("Failed to delete — try again");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -206,6 +225,15 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
           </div>
         </ModalContent>
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete place?"
+        description="This will permanently remove this place from your backlog. This cannot be undone."
+        onConfirm={handleDelete}
+        loading={deleting}
+      />
 
       {/* Edit sheet */}
       <Sheet open={open && editing} onOpenChange={(o) => { if (!o) cancelEditing(); }}>
@@ -356,12 +384,22 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                 />
               </div>
 
-              <SheetFooter className="px-0 pt-2 pb-4 flex-row gap-3">
-                <Button type="button" variant="outline" className="flex-1 cursor-pointer" onClick={cancelEditing}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1 cursor-pointer" disabled={loading}>
-                  {loading ? "Saving…" : "Save changes"}
+              <SheetFooter className="px-0 pt-2 pb-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" className="flex-1" onClick={cancelEditing}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={loading}>
+                    {loading ? "Saving…" : "Save changes"}
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete place
                 </Button>
               </SheetFooter>
             </form>

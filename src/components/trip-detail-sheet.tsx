@@ -26,6 +26,7 @@ import type { Trip } from "@/lib/db/schema";
 import { STATUS_COLORS, STATUS_LABELS, STATUSES } from "@/app/trips/constants";
 import { useCityPhoto } from "@/app/trips/hooks/use-city-photo";
 import { toast } from "@/lib/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface TripDetailSheetProps {
   trip: Trip | null;
@@ -41,6 +42,8 @@ function formatDate(iso: string) {
 export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDetailSheetProps) {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<{
     name: string;
     citiesRaw: string;
@@ -68,6 +71,22 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
 
   function cancelEditing() {
     setEditing(false);
+  }
+
+  async function handleDelete() {
+    if (!trip) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/trips/${trip.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setConfirmDelete(false);
+      onUpdated();
+      toast.success("Trip deleted");
+    } catch {
+      toast.error("Failed to delete — try again");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function set(field: string, value: string) {
@@ -183,6 +202,15 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
         </ModalContent>
       </Modal>
 
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete trip?"
+        description="This will permanently remove this trip and all its places. This cannot be undone."
+        onConfirm={handleDelete}
+        loading={deleting}
+      />
+
       {/* Edit sheet */}
       <Sheet open={open && editing} onOpenChange={(o) => { if (!o) { cancelEditing(); } }}>
         <SheetContent
@@ -265,12 +293,22 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
                 />
               </div>
 
-              <SheetFooter className="px-0 pt-2 pb-4 flex-row gap-3">
-                <Button type="button" variant="outline" className="flex-1 cursor-pointer" onClick={cancelEditing}>
+              <SheetFooter className="px-0 pt-2 pb-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                <Button type="button" variant="outline" className="flex-1" onClick={cancelEditing}>
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 cursor-pointer" disabled={loading}>
+                <Button type="submit" className="flex-1" disabled={loading}>
                   {loading ? "Saving…" : "Save changes"}
+                </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete trip
                 </Button>
               </SheetFooter>
             </form>
