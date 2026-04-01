@@ -7,7 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { PlaceDetailSheet } from "@/components/place-detail-sheet";
 import { SignOutButton } from "@/components/sign-out-button";
-import { PlusIcon } from "lucide-react";
+import { CheckIcon, SkipForwardIcon, PlusIcon } from "lucide-react";
+import { toast } from "@/lib/toast";
 import type { Place } from "@/lib/db/schema";
 import {
   CATEGORY_LABELS,
@@ -57,6 +58,21 @@ export default function HomePage() {
   const { places, loading, reload } = usePlaces();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+
+  async function handleStatusChange(placeId: string, status: string) {
+    try {
+      const res = await fetch(`/api/places/${placeId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      reload();
+      toast.success(status === "visited" ? "Marked as visited" : status === "skipped" ? "Marked as skipped" : "Moved to backlog");
+    } catch {
+      toast.error("Failed to update — try again");
+    }
+  }
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterCity, setFilterCity] = useState("all");
@@ -211,7 +227,7 @@ export default function HomePage() {
                     }`}
                     onClick={() => setSelectedPlace(place)}
                   >
-                    <div className="px-4 py-4">
+                    <div className="px-4 pt-4 pb-3">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-medium leading-snug">{place.name}</span>
                         {place.category && (
@@ -237,6 +253,33 @@ export default function HomePage() {
                           {place.notes}
                         </p>
                       )}
+                    </div>
+                    <div
+                      className="flex gap-1 border-t border-border/40 px-3 py-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() => handleStatusChange(place.id, place.status === "visited" ? "backlog" : "visited")}
+                        className={`flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                          place.status === "visited"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <CheckIcon className="size-3" />
+                        Visited
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(place.id, place.status === "skipped" ? "backlog" : "skipped")}
+                        className={`flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                          place.status === "skipped"
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <SkipForwardIcon className="size-3" />
+                        Skip
+                      </button>
                     </div>
                   </li>
                 ))}
