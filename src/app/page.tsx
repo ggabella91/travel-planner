@@ -7,32 +7,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { PlaceDetailSheet } from "@/components/place-detail-sheet";
 import { SignOutButton } from "@/components/sign-out-button";
-import { CheckIcon, SkipForwardIcon, PlusIcon } from "lucide-react";
+import { CheckIcon, SkipForwardIcon, PlusIcon, SearchIcon, XIcon, SlidersHorizontalIcon } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { PlacesFilterSheet } from "@/components/places-filter-sheet";
 import type { Place } from "@/lib/db/schema";
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
   CATEGORY_COLORS,
-  CATEGORY_ACTIVE_CHIP_COLORS,
   CATEGORY_CARD_ACCENT,
 } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
-import { STATUS_LABELS, STATUS_ICONS, STATUS_DOT } from "@/app/places/constants";
+import { STATUS_DOT } from "@/app/places/constants";
 import { usePlaces } from "@/app/places/hooks/use-places";
 
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 w-12">
-        {label}
-      </span>
-      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function PlacesSkeleton() {
   return (
@@ -58,6 +46,8 @@ export default function HomePage() {
   const { places, loading, reload } = usePlaces();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   async function handleStatusChange(placeId: string, status: string) {
     try {
@@ -87,16 +77,24 @@ export default function HomePage() {
     [places],
   );
 
-  const filteredPlaces = useMemo(
-    () =>
-      places.filter((p) => {
-        if (filterStatus !== "all" && p.status !== filterStatus) return false;
-        if (filterCategory !== "all" && p.category !== filterCategory) return false;
-        if (filterCity !== "all" && p.city !== filterCity) return false;
-        return true;
-      }),
-    [places, filterStatus, filterCategory, filterCity],
-  );
+  const filteredPlaces = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return places.filter((p) => {
+      if (filterStatus !== "all" && p.status !== filterStatus) return false;
+      if (filterCategory !== "all" && p.category !== filterCategory) return false;
+      if (filterCity !== "all" && p.city !== filterCity) return false;
+      if (q) {
+        const haystack = `${p.name} ${p.city} ${p.notes ?? ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [places, filterStatus, filterCategory, filterCity, searchQuery]);
+
+  const activeFilterCount =
+    (filterStatus !== "all" ? 1 : 0) +
+    (filterCategory !== "all" ? 1 : 0) +
+    (filterCity !== "all" ? 1 : 0);
 
   return (
     <div className="min-h-screen">
@@ -112,6 +110,44 @@ export default function HomePage() {
             <SignOutButton />
           </div>
         </div>
+        {places.length > 0 && (
+          <div className="mx-auto max-w-lg px-5 pb-3 flex items-center gap-2">
+            <div className="relative flex flex-1 items-center">
+              <SearchIcon className="absolute left-3 size-3.5 text-muted-foreground/50 pointer-events-none" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search places…"
+                className="w-full rounded-lg border border-input bg-muted/40 py-1.5 pl-8 pr-8 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring focus:ring-3 focus:ring-ring/50"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 cursor-pointer text-muted-foreground/50 hover:text-muted-foreground"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setFilterOpen(true)}
+              aria-label="Filter places"
+              className={`relative cursor-pointer rounded-lg p-1.5 transition-colors ${
+                activeFilterCount > 0
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <SlidersHorizontalIcon className="size-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
@@ -136,84 +172,6 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            {/* Filters */}
-            <div className="flex flex-col pb-5">
-              <div className="py-2.5">
-                <FilterRow label="Status">
-                  {["all", "backlog", "visited", "skipped"].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setFilterStatus(s)}
-                      className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        filterStatus === s
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                      }`}
-                    >
-                      <span className="mr-1">{STATUS_ICONS[s]}</span>
-                      {STATUS_LABELS[s]}
-                    </button>
-                  ))}
-                </FilterRow>
-              </div>
-
-              {categories.length > 0 && (
-                <>
-                  <div className="h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
-                  <div className="py-2.5">
-                    <FilterRow label="Type">
-                      <button
-                        onClick={() => setFilterCategory("all")}
-                        className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                          filterCategory === "all"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                        }`}
-                      >
-                        All
-                      </button>
-                      {categories.map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => setFilterCategory(c)}
-                          className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                            filterCategory === c
-                              ? CATEGORY_ACTIVE_CHIP_COLORS[c] ?? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                          }`}
-                        >
-                          <span className="mr-1">{CATEGORY_ICONS[c]}</span>
-                          {CATEGORY_LABELS[c] ?? c}
-                        </button>
-                      ))}
-                    </FilterRow>
-                  </div>
-                </>
-              )}
-
-              {cities.length > 1 && (
-                <>
-                  <div className="h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
-                  <div className="py-2.5">
-                    <FilterRow label="City">
-                      {[{ value: "all", label: "All" }, ...cities.map((c) => ({ value: c, label: c }))].map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => setFilterCity(opt.value)}
-                          className={`shrink-0 cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                            filterCity === opt.value
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </FilterRow>
-                  </div>
-                </>
-              )}
-            </div>
 
             {filteredPlaces.length === 0 ? (
               <p className="pt-16 text-center text-sm text-muted-foreground">No places match your filters.</p>
@@ -302,6 +260,20 @@ export default function HomePage() {
       </div>
 
       <AddPlaceSheet open={addOpen} onOpenChange={setAddOpen} onAdded={reload} />
+
+      <PlacesFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        filterStatus={filterStatus}
+        filterCategory={filterCategory}
+        filterCity={filterCity}
+        onFilterStatus={setFilterStatus}
+        onFilterCategory={setFilterCategory}
+        onFilterCity={setFilterCity}
+        onReset={() => { setFilterStatus("all"); setFilterCategory("all"); setFilterCity("all"); }}
+        categories={categories}
+        cities={cities}
+      />
 
       <PlaceDetailSheet
         place={selectedPlace}
