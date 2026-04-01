@@ -4,6 +4,22 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await ctx.params;
+
+  const [trip] = await db
+    .select()
+    .from(trips)
+    .where(and(eq(trips.id, id), eq(trips.userId, session.user.email)));
+
+  if (!trip) return Response.json({ error: "Not found" }, { status: 404 });
+
+  return Response.json(trip);
+}
+
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
