@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { Toaster } from "@/components/ui/toaster";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
       <body>
+        <NextTopLoader color="#5046e4" shadow={false} height={2} />
         {/* Ambient gradient blobs */}
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-48 -right-24 h-[28rem] w-[28rem] rounded-full bg-primary/8 blur-3xl" />
