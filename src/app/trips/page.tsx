@@ -4,10 +4,8 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
-import { TripDetailSheet } from "@/components/trip-detail-sheet";
 import { SignOutButton } from "@/components/sign-out-button";
 import { PlusIcon } from "lucide-react";
-import type { Trip } from "@/lib/db/schema";
 import { STATUS_LABELS, STATUS_ICONS } from "./constants";
 import { TripCard } from "./components/trip-card";
 import { useTrips } from "./hooks/use-trips";
@@ -32,7 +30,6 @@ function TripsSkeleton() {
 export default function TripsPage() {
   const { trips, loading, reload } = useTrips();
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
 
   const filteredTrips = useMemo(
@@ -109,11 +106,7 @@ export default function TripsPage() {
             ) : (
               <ul className="flex flex-col gap-3">
                 {filteredTrips.map((trip) => (
-                  <TripCard
-                    key={trip.id}
-                    trip={trip}
-                    onClick={() => setSelectedTrip(trip)}
-                  />
+                  <TripCard key={trip.id} trip={trip} />
                 ))}
               </ul>
             )}
@@ -133,13 +126,6 @@ export default function TripsPage() {
       </div>
 
       <CreateTripSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} />
-
-      <TripDetailSheet
-        trip={selectedTrip}
-        open={!!selectedTrip}
-        onOpenChange={(o) => { if (!o) setSelectedTrip(null); }}
-        onUpdated={() => { reload(); setSelectedTrip(null); }}
-      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -33,15 +33,33 @@ interface TripDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void;
+  initialEditing?: boolean;
 }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDetailSheetProps) {
-  const [editing, setEditing] = useState(false);
+export function TripDetailSheet({ trip, open, onOpenChange, onUpdated, initialEditing = false }: TripDetailSheetProps) {
+  const [editing, setEditing] = useState(initialEditing);
   const [loading, setLoading] = useState(false);
+
+  // Sync editing state and pre-fill form when sheet opens
+  useEffect(() => {
+    if (open && initialEditing && trip) {
+      setForm({
+        name: trip.name,
+        citiesRaw: JSON.parse(trip.cities).join(", "),
+        startDate: trip.startDate ?? "",
+        endDate: trip.endDate ?? "",
+        status: trip.status,
+        notes: trip.notes ?? "",
+      });
+      setEditing(true);
+    } else if (open && !initialEditing) {
+      setEditing(false);
+    }
+  }, [open, initialEditing, trip]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<{
@@ -70,7 +88,11 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
   }
 
   function cancelEditing() {
-    setEditing(false);
+    if (initialEditing) {
+      onOpenChange(false);
+    } else {
+      setEditing(false);
+    }
   }
 
   async function handleDelete() {
@@ -107,7 +129,11 @@ export function TripDetailSheet({ trip, open, onOpenChange, onUpdated }: TripDet
         body: JSON.stringify({ ...form, cities: citiesJson }),
       });
       if (!res.ok) throw new Error("Failed to save");
-      setEditing(false);
+      if (initialEditing) {
+        onOpenChange(false);
+      } else {
+        setEditing(false);
+      }
       onUpdated();
       toast.success("Trip updated");
     } catch {
