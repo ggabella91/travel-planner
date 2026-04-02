@@ -267,8 +267,8 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                     }}
                     onSelect={(opt) => {
                       set("city", opt.value);
-                      if (opt.meta?.state) set("state", opt.meta.state);
-                      if (opt.meta?.country && !form.country) set("country", opt.meta.country);
+                      if (opt.meta?.state) set("state", opt.meta.state as string);
+                      if (opt.meta?.country && !form.country) set("country", opt.meta.country as string);
                     }}
                     required
                   />

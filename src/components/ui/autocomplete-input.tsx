@@ -8,7 +8,7 @@ export interface AutocompleteOption {
   label: string;
   value: string;
   sublabel?: string;
-  meta?: Record<string, string>;
+  meta?: Record<string, unknown>;
 }
 
 interface AutocompleteInputProps {
@@ -20,6 +20,7 @@ interface AutocompleteInputProps {
   onSelect?: (option: AutocompleteOption) => void;
   required?: boolean;
   autoFocus?: boolean;
+  debounceMs?: number;
 }
 
 export function AutocompleteInput({
@@ -31,6 +32,7 @@ export function AutocompleteInput({
   onSelect,
   required,
   autoFocus,
+  debounceMs = 300,
 }: AutocompleteInputProps) {
   const [options, setOptions] = useState<AutocompleteOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ export function AutocompleteInput({
         } finally {
           setLoading(false);
         }
-      }, 300);
+      }, debounceMs);
     },
     [onChange, onSearch],
   );
