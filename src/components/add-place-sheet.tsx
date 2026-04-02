@@ -30,6 +30,7 @@ interface AddPlaceSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded: () => void;
+  near?: string;
 }
 
 const EMPTY_FORM = {
@@ -45,7 +46,7 @@ const EMPTY_FORM = {
   externalSource: "",
 };
 
-export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProps) {
+export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceSheetProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
@@ -125,7 +126,8 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded }: AddPlaceSheetProp
                 }}
                 onSearch={async (q) => {
                   if (q.length < 2) return [];
-                  const res = await fetch(`/api/autocomplete/places?q=${encodeURIComponent(q)}`);
+                  const url = `/api/autocomplete/places?q=${encodeURIComponent(q)}${near ? `&near=${encodeURIComponent(near)}` : ""}`;
+                  const res = await fetch(url);
                   if (!res.ok) return [];
                   const suggestions: FoursquareSuggestion[] = await res.json();
                   return suggestions.map((s) => ({

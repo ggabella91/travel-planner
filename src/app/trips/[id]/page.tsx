@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TripDetailSheet } from "@/components/trip-detail-sheet";
+import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { AddPlacesSheet } from "./components/add-places-sheet";
 import { useTripPlaces } from "./hooks/use-trip-places";
 import { useCityPhoto } from "../hooks/use-city-photo";
@@ -20,7 +21,8 @@ import { toast } from "@/lib/toast";
 import type { Place } from "@/lib/db/schema";
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,6 +39,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
 
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [addNewOpen, setAddNewOpen] = useState(false);
 
   const addedPlaceIds = useMemo(
     () => new Set(tripPlaces.map((p) => p.id)),
@@ -227,6 +230,14 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         places={places}
         addedPlaceIds={addedPlaceIds}
         onToggle={handleToggle}
+        onAddNew={() => setAddNewOpen(true)}
+      />
+
+      <AddPlaceSheet
+        open={addNewOpen}
+        onOpenChange={setAddNewOpen}
+        onAdded={() => { reloadTripPlaces(); }}
+        near={cities[0]}
       />
     </div>
   );

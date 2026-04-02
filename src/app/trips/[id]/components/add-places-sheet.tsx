@@ -16,6 +16,7 @@ interface AddPlacesSheetProps {
   places: Place[];
   addedPlaceIds: Set<string>;
   onToggle: (place: Place, added: boolean) => void;
+  onAddNew?: () => void;
 }
 
 export function AddPlacesSheet({
@@ -26,6 +27,7 @@ export function AddPlacesSheet({
   places,
   addedPlaceIds,
   onToggle,
+  onAddNew,
 }: AddPlacesSheetProps) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
@@ -122,6 +124,17 @@ export function AddPlacesSheet({
           })}
           {sorted.length === 0 && (
             <p className="pt-8 text-center text-sm text-muted-foreground">No places match your search.</p>
+          )}
+          {onAddNew && (
+            <li className="pt-2 pb-1 text-center">
+              <button
+                type="button"
+                onClick={() => { onOpenChange(false); onAddNew(); }}
+                className="text-xs text-muted-foreground underline underline-offset-2 cursor-pointer hover:text-foreground transition-colors"
+              >
+                Don't see it? Add a new place →
+              </button>
+            </li>
           )}
         </ul>
       </SheetContent>

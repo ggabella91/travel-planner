@@ -9,10 +9,13 @@ export async function GET(req: NextRequest) {
   const apiKey = process.env.FOURSQUARE_API_KEY;
   if (!apiKey) return Response.json({ error: "Foursquare API key not configured" }, { status: 500 });
 
+  // Optional explicit near param (e.g. from trip context) overrides comma-parsing
+  const nearParam = req.nextUrl.searchParams.get("near")?.trim() ?? "";
+
   // Split "Place Name, City" into search query + location hint
   const commaIdx = q.lastIndexOf(",");
   const query = commaIdx > 0 ? q.slice(0, commaIdx).trim() : q;
-  const near = commaIdx > 0 ? q.slice(commaIdx + 1).trim() : "";
+  const near = nearParam || (commaIdx > 0 ? q.slice(commaIdx + 1).trim() : "");
 
   const url = new URL("https://places-api.foursquare.com/places/search");
   url.searchParams.set("query", query);
