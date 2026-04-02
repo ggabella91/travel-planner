@@ -37,7 +37,8 @@ interface TripDetailSheetProps {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function TripDetailSheet({ trip, open, onOpenChange, onUpdated, initialEditing = false }: TripDetailSheetProps) {
