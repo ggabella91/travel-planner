@@ -14,6 +14,8 @@ export const places = pgTable("places", {
   status: text("status").notNull().default("backlog"), // 'backlog' | 'visited' | 'skipped'
   rating: integer("rating"), // 1-5, nullable, only after visited
   tags: text("tags"), // JSON array string e.g. '["cheap","outdoor"]'
+  externalId: text("external_id"), // e.g. Foursquare fsq_id
+  externalSource: text("external_source"), // e.g. 'foursquare'
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
