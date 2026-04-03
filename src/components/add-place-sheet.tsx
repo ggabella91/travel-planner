@@ -50,6 +50,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
+  const [nearInput, setNearInput] = useState("");
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -100,9 +101,12 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
     if (!o) {
       setForm(EMPTY_FORM);
       setDuplicate(null);
+      setNearInput("");
     }
     onOpenChange(o);
   }
+
+  const effectiveNear = near ?? (nearInput.trim() || undefined);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -112,6 +116,18 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
             <SheetTitle>Add a place</SheetTitle>
           </SheetHeader>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {!near && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="near-input">Destination <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  id="near-input"
+                  placeholder="e.g. Tokyo, Medellín"
+                  value={nearInput}
+                  onChange={(e) => setNearInput(e.target.value)}
+                />
+              </div>
+            )}
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="name">Name *</Label>
               <AutocompleteInput
@@ -126,7 +142,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
                 }}
                 onSearch={async (q) => {
                   if (q.length < 2) return [];
-                  const url = `/api/autocomplete/places?q=${encodeURIComponent(q)}${near ? `&near=${encodeURIComponent(near)}` : ""}`;
+                  const url = `/api/autocomplete/places?q=${encodeURIComponent(q)}${effectiveNear ? `&near=${encodeURIComponent(effectiveNear)}` : ""}`;
                   const res = await fetch(url);
                   if (!res.ok) return [];
                   const suggestions: FoursquareSuggestion[] = await res.json();
