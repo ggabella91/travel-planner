@@ -36,15 +36,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
         },
       })),
     );
-  } catch (e: unknown) {
-    const cause = (e as { cause?: unknown })?.cause;
-    console.error("[GET trip places] error:", e);
-    console.error("[GET trip places] cause:", cause);
-    return Response.json({
-      error: String(e),
-      cause: String(cause),
-      causeDetail: cause != null ? JSON.parse(JSON.stringify(cause, Object.getOwnPropertyNames(cause as object))) : null,
-    }, { status: 500 });
+  } catch (e) {
+    console.error("[GET trip places]", e);
+    return Response.json({ error: "Failed to load places" }, { status: 500 });
   }
 }
 
