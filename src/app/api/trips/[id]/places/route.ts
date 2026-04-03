@@ -24,8 +24,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     .select({ place: places, tripPlace: tripPlaces })
     .from(tripPlaces)
     .innerJoin(places, eq(tripPlaces.placeId, places.id))
-    .where(eq(tripPlaces.tripId, tripId))
-    .orderBy(tripPlaces.order);
+    .where(eq(tripPlaces.tripId, tripId));
 
   return Response.json(
     rows.map((r) => ({
