@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Place } from "@/lib/db/schema";
 
-export type TripPlace = Place & { tripPlace: { id: string; day: number | null; order: number | null; note: string | null } };
+export type TripPlace = Place & { tripPlace: { id: string; days: number[]; order: number | null; note: string | null } };
 
 export function useTripPlaces(tripId: string) {
   const [tripPlaces, setTripPlaces] = useState<TripPlace[]>([]);

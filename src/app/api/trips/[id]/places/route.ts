@@ -25,9 +25,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     .from(tripPlaces)
     .innerJoin(places, eq(tripPlaces.placeId, places.id))
     .where(eq(tripPlaces.tripId, tripId))
-    .orderBy(tripPlaces.day, tripPlaces.order);
+    .orderBy(tripPlaces.order);
 
-  return Response.json(rows.map((r) => ({ ...r.place, tripPlace: r.tripPlace })));
+  return Response.json(
+    rows.map((r) => ({
+      ...r.place,
+      tripPlace: {
+        ...r.tripPlace,
+        days: r.tripPlace.days ? (JSON.parse(r.tripPlace.days) as number[]) : [],
+      },
+    })),
+  );
 }
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

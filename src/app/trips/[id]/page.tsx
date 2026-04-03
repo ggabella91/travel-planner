@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, use, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, use, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,23 +10,196 @@ import { TripDetailSheet } from "@/components/trip-detail-sheet";
 import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { AddPlacesSheet } from "./components/add-places-sheet";
 import { useTripPlaces } from "./hooks/use-trip-places";
+import type { TripPlace } from "./hooks/use-trip-places";
 import { useCityPhoto } from "../hooks/use-city-photo";
 import { useTrips } from "../hooks/use-trips";
 import { usePlaces } from "@/app/places/hooks/use-places";
-import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS, STATUS_CARD_ACCENT } from "../constants";
-import { CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/categories";
+import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS } from "../constants";
+import { CATEGORY_ICONS } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
 import { toast } from "@/lib/toast";
-import type { Place } from "@/lib/db/schema";
+import type { Place, Trip } from "@/lib/db/schema";
 
 function formatDate(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+function dayLabel(day: number, trip: Trip, short = false) {
+  if (!trip.startDate) return `Day ${day}`;
+  const [y, m, d] = trip.startDate.split("-").map(Number);
+  const date = new Date(y, m - 1, d + day - 1);
+  const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return short ? dateStr : `Day ${day} · ${dateStr}`;
+}
+
+function PlaceCard({
+  place,
+  trip,
+  numDays,
+  onDaysChange,
+  onRemove,
+}: {
+  place: TripPlace;
+  trip: Trip;
+  numDays: number;
+  onDaysChange: (placeId: string, days: number[]) => Promise<void>;
+  onRemove: (placeId: string) => void;
+}) {
+  const assignedDays = place.tripPlace.days;
+  const [editing, setEditing] = useState(false);
+  const [pending, setPending] = useState<number[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  function startEditing() {
+    setPending([...assignedDays]);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    setEditing(false);
+    setPending([]);
+  }
+
+  function toggleDay(d: number) {
+    setPending((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev].concat(d).sort((a, b) => a - b),
+    );
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      await onDaysChange(place.id, pending);
+      setEditing(false);
+      setPending([]);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <li className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="flex items-start gap-3 px-4 pt-3 pb-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium leading-snug truncate">{place.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {place.category && <span className="mr-1">{CATEGORY_ICONS[place.category]}</span>}
+            {getFlag(place.country)} {place.city}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {!editing && (
+            <button
+              onClick={startEditing}
+              className="cursor-pointer rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Edit days"
+            >
+              <PencilIcon className="size-3.5" />
+            </button>
+          )}
+          <button
+            onClick={() => onRemove(place.id)}
+            className="cursor-pointer rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Remove from trip"
+          >
+            <Trash2Icon className="size-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Assigned day chips (view mode) */}
+      {!editing && assignedDays.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+          {assignedDays.map((d) => (
+            <span
+              key={d}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+            >
+              Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Edit mode: day chip picker */}
+      {editing && (
+        <div className="px-4 pb-3">
+          <p className="mb-2 text-xs text-muted-foreground">Select days:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: numDays }, (_, i) => i + 1).map((d) => {
+              const selected = pending.includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(d)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                    selected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  {selected && <CheckIcon className="size-3" />}
+                  Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={cancelEditing}
+              className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted cursor-pointer"
+            >
+              <XIcon className="size-3" /> Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              <CheckIcon className="size-3" /> {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function PlaceList({
+  places,
+  trip,
+  numDays,
+  onDaysChange,
+  onRemove,
+}: {
+  places: TripPlace[];
+  trip: Trip;
+  numDays: number;
+  onDaysChange: (placeId: string, days: number[]) => Promise<void>;
+  onRemove: (placeId: string) => void;
+}) {
+  return (
+    <ul className="flex flex-col gap-2">
+      {places.map((place) => (
+        <PlaceCard
+          key={place.id}
+          place={place}
+          trip={trip}
+          numDays={numDays}
+          onDaysChange={onDaysChange}
+          onRemove={onRemove}
+        />
+      ))}
+    </ul>
+  );
+}
+
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
 
   const { trips, loading: tripsLoading, reload: reloadTrips } = useTrips();
   const { places } = usePlaces();
@@ -46,6 +218,41 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     [tripPlaces],
   );
 
+  // Number of days from trip dates, or derived from max assigned day
+  const numDays = useMemo(() => {
+    if (trip?.startDate && trip?.endDate) {
+      const [sy, sm, sd] = trip.startDate.split("-").map(Number);
+      const [ey, em, ed] = trip.endDate.split("-").map(Number);
+      const diff = Math.round(
+        (new Date(ey, em - 1, ed).getTime() - new Date(sy, sm - 1, sd).getTime()) / 86400000,
+      );
+      return diff + 1;
+    }
+    const maxDay = tripPlaces.reduce(
+      (m, p) => Math.max(m, ...p.tripPlace.days, 0),
+      0,
+    );
+    return Math.max(maxDay + 1, 7);
+  }, [trip, tripPlaces]);
+
+  // Group places by day — a place can appear in multiple day buckets
+  const grouped = useMemo(() => {
+    const byDay = new Map<number | null, TripPlace[]>();
+    byDay.set(null, []);
+    for (let d = 1; d <= numDays; d++) byDay.set(d, []);
+    for (const p of tripPlaces) {
+      if (p.tripPlace.days.length === 0) {
+        byDay.get(null)!.push(p);
+      } else {
+        for (const d of p.tripPlace.days) {
+          if (!byDay.has(d)) byDay.set(d, []);
+          byDay.get(d)!.push(p);
+        }
+      }
+    }
+    return byDay;
+  }, [tripPlaces, numDays]);
+
   function handleToggle(place: Place, added: boolean) {
     reloadTripPlaces();
   }
@@ -60,6 +267,19 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
       toast.error("Failed to remove — try again");
     }
   }
+
+  const handleDaysChange = useCallback(async (placeId: string, days: number[]) => {
+    const res = await fetch(`/api/trips/${id}/places/${placeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ days }),
+    });
+    if (!res.ok) {
+      toast.error("Failed to update days — try again");
+      throw new Error();
+    }
+    reloadTripPlaces();
+  }, [id, reloadTripPlaces]);
 
   if (tripsLoading) {
     return (
@@ -171,33 +391,53 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
               <p className="text-xs text-muted-foreground/50">Tap + to add from your backlog.</p>
             </div>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {tripPlaces.map((place) => (
-                <li
-                  key={place.id}
-                  className={`rounded-xl border bg-card shadow-sm overflow-hidden ${
-                    place.category ? `border-l-4 ${CATEGORY_COLORS[place.category] ? `border-l-[${CATEGORY_COLORS[place.category]}]` : ""}` : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3 px-4 py-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-snug truncate">{place.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {place.category && <span className="mr-1">{CATEGORY_ICONS[place.category]}</span>}
-                        {getFlag(place.country)} {place.city}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleRemovePlace(place.id)}
-                      className="cursor-pointer shrink-0 rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      aria-label="Remove from trip"
-                    >
-                      <Trash2Icon className="size-3.5" />
-                    </button>
+            <div className="flex flex-col gap-6">
+              {/* Day sections */}
+              {Array.from({ length: numDays }, (_, i) => i + 1).map((day) => {
+                const dayPlaces = grouped.get(day) ?? [];
+                return (
+                  <div key={day}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      {trip && dayLabel(day, trip)}
+                    </p>
+                    {dayPlaces.length === 0 ? (
+                      <p className="text-xs text-muted-foreground/40 pl-0.5">Nothing scheduled</p>
+                    ) : (
+                      <PlaceList
+                        places={dayPlaces}
+                        trip={trip!}
+                        numDays={numDays}
+                        onDaysChange={handleDaysChange}
+                        onRemove={handleRemovePlace}
+                      />
+                    )}
                   </div>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+
+              {/* Unscheduled section */}
+              {(() => {
+                const unscheduled = grouped.get(null) ?? [];
+                return (
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      Unscheduled
+                    </p>
+                    {unscheduled.length === 0 ? (
+                      <p className="text-xs text-muted-foreground/40 pl-0.5">None</p>
+                    ) : (
+                      <PlaceList
+                        places={unscheduled}
+                        trip={trip!}
+                        numDays={numDays}
+                        onDaysChange={handleDaysChange}
+                        onRemove={handleRemovePlace}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
           )}
         </div>
       </main>
