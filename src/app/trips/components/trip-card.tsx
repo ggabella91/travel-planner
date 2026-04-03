@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import type { Trip } from "@/lib/db/schema";
+import type { TripWithStats } from "../hooks/use-trips";
 import { useCityPhoto } from "../hooks/use-city-photo";
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS, STATUS_CARD_ACCENT } from "../constants";
 
@@ -15,7 +15,7 @@ function formatDate(iso: string) {
 }
 
 interface TripCardProps {
-  trip: Trip;
+  trip: TripWithStats;
 }
 
 export function TripCard({ trip }: TripCardProps) {
@@ -54,6 +54,11 @@ export function TripCard({ trip }: TripCardProps) {
             </Badge>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{cities.join(" · ")}</p>
+          {trip.placeCount > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground/60">
+              {trip.placeCount} {trip.placeCount === 1 ? "place" : "places"}
+            </p>
+          )}
           {(trip.startDate || trip.endDate) && (
             <p className="mt-1 text-xs text-muted-foreground/70">
               {trip.startDate && formatDate(trip.startDate)}

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { trips } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { trips, tripPlaces } from "@/lib/db/schema";
+import { count, desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 
 export async function GET() {
@@ -8,11 +8,14 @@ export async function GET() {
   if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const rows = await db
-    .select()
+    .select({ trip: trips, placeCount: count(tripPlaces.id) })
     .from(trips)
+    .leftJoin(tripPlaces, eq(tripPlaces.tripId, trips.id))
     .where(eq(trips.userId, session.user.email))
+    .groupBy(trips.id)
     .orderBy(desc(trips.createdAt));
-  return Response.json(rows);
+
+  return Response.json(rows.map((r) => ({ ...r.trip, placeCount: r.placeCount })));
 }
 
 export async function POST(request: Request) {
