@@ -25,12 +25,15 @@ function formatDate(iso: string) {
   return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function dayLabel(day: number, trip: Trip, short = false) {
+function dayLabel(day: number, trip: Trip, format: "full" | "short" | "medium" = "full") {
   if (!trip.startDate) return `Day ${day}`;
   const [y, m, d] = trip.startDate.split("-").map(Number);
   const date = new Date(y, m - 1, d + day - 1);
   const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return short ? dateStr : `Day ${day} · ${dateStr}`;
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  if (format === "short") return dateStr;
+  if (format === "medium") return `${weekday}, ${dateStr}`;
+  return `Day ${day} · ${weekday}, ${dateStr}`;
 }
 
 function PlaceCard({
@@ -130,7 +133,7 @@ function PlaceCard({
               key={d}
               className="inline-flex items-center gap-1 rounded-full bg-primary/10 pl-2.5 pr-1.5 py-0.5 text-xs font-medium text-primary"
             >
-              Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+              Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, "short")}` : ""}
               <button
                 type="button"
                 onClick={() => removeDay(d)}
@@ -180,7 +183,7 @@ function PlaceCard({
                         className={`flex w-full cursor-pointer items-center justify-between px-3 py-2 text-xs transition-colors ${selected ? "bg-primary/8 text-primary" : "hover:bg-accent text-foreground"}`}
                       >
                         <span className="font-medium">
-                          Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+                          Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, "medium")}` : ""}
                         </span>
                         {selected && <CheckIcon className="size-3 shrink-0 text-primary" />}
                       </button>
@@ -438,11 +441,11 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 const dayPlaces = grouped.get(day) ?? [];
                 return (
                   <div key={day}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
                       {trip && dayLabel(day, trip)}
                     </p>
                     {dayPlaces.length === 0 ? (
-                      <p className="text-xs text-muted-foreground/40 pl-0.5">Nothing scheduled</p>
+                      <p className="text-xs text-muted-foreground/40 px-4">Nothing scheduled</p>
                     ) : (
                       <PlaceList
                         places={dayPlaces}
@@ -462,11 +465,11 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 const unscheduled = grouped.get(null) ?? [];
                 return (
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
                       Unscheduled
                     </p>
                     {unscheduled.length === 0 ? (
-                      <p className="text-xs text-muted-foreground/40 pl-0.5">None</p>
+                      <p className="text-xs text-muted-foreground/40 px-4">None</p>
                     ) : (
                       <PlaceList
                         places={unscheduled}
