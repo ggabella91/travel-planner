@@ -20,21 +20,26 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const owned = await verifyTripOwnership(tripId, session.user.email);
   if (!owned) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const rows = await db
-    .select({ place: places, tripPlace: tripPlaces })
-    .from(tripPlaces)
-    .innerJoin(places, eq(tripPlaces.placeId, places.id))
-    .where(eq(tripPlaces.tripId, tripId));
+  try {
+    const rows = await db
+      .select({ place: places, tripPlace: tripPlaces })
+      .from(tripPlaces)
+      .innerJoin(places, eq(tripPlaces.placeId, places.id))
+      .where(eq(tripPlaces.tripId, tripId));
 
-  return Response.json(
-    rows.map((r) => ({
-      ...r.place,
-      tripPlace: {
-        ...r.tripPlace,
-        days: r.tripPlace.days ? (JSON.parse(r.tripPlace.days) as number[]) : [],
-      },
-    })),
-  );
+    return Response.json(
+      rows.map((r) => ({
+        ...r.place,
+        tripPlace: {
+          ...r.tripPlace,
+          days: r.tripPlace.days ? (JSON.parse(r.tripPlace.days) as number[]) : [],
+        },
+      })),
+    );
+  } catch (e) {
+    console.error("[GET trip places]", e);
+    return Response.json({ error: String(e) }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
