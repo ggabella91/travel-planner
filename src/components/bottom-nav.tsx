@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapPinIcon, PlaneIcon } from "lucide-react";
+import { MapPinIcon, PlaneIcon, UserIcon } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "Places", icon: MapPinIcon },
   { href: "/trips", label: "Trips", icon: PlaneIcon },
+  { href: "/account", label: "Account", icon: UserIcon },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname === "/signup") return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur-sm [padding-bottom:env(safe-area-inset-bottom)]">
