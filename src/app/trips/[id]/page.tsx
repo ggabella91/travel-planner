@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, use, useMemo, useCallback } from "react";
+import { useState, use, useMemo, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, CalendarPlusIcon, CheckIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,50 +37,74 @@ function PlaceCard({
   place,
   trip,
   numDays,
+  currentDay,
   onDaysChange,
   onRemove,
 }: {
   place: TripPlace;
   trip: Trip;
   numDays: number;
+  currentDay: number | null; // null = Unscheduled section
   onDaysChange: (placeId: string, days: number[]) => Promise<void>;
   onRemove: (placeId: string) => void;
 }) {
   const assignedDays = place.tripPlace.days;
-  const [editing, setEditing] = useState(false);
+  const isUnscheduled = currentDay === null;
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pending, setPending] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  function startEditing() {
-    setPending([...assignedDays]);
-    setEditing(true);
-  }
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+        setPending([]);
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
 
-  function cancelEditing() {
-    setEditing(false);
+  function openDropdown() {
     setPending([]);
+    setDropdownOpen(true);
   }
 
-  function toggleDay(d: number) {
+  function togglePending(d: number) {
     setPending((prev) =>
-      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev].concat(d).sort((a, b) => a - b),
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
     );
   }
 
-  async function save() {
+  async function confirmAdd() {
+    if (pending.length === 0) return;
     setSaving(true);
     try {
-      await onDaysChange(place.id, pending);
-      setEditing(false);
+      await onDaysChange(place.id, [...assignedDays, ...pending].sort((a, b) => a - b));
+      setDropdownOpen(false);
       setPending([]);
     } finally {
       setSaving(false);
     }
   }
 
+  async function removeDay(d: number) {
+    setSaving(true);
+    try {
+      await onDaysChange(place.id, assignedDays.filter((x) => x !== d));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const availableDays = Array.from({ length: numDays }, (_, i) => i + 1).filter(
+    (d) => !assignedDays.includes(d),
+  );
+
   return (
-    <li className="rounded-xl border bg-card shadow-sm overflow-hidden">
-      <div className="flex items-start gap-3 px-4 pt-3 pb-2">
+    <li className="rounded-xl border bg-card shadow-sm">
+      <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium leading-snug truncate">{place.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -88,83 +112,97 @@ function PlaceCard({
             {getFlag(place.country)} {place.city}
           </p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {!editing && (
-            <button
-              onClick={startEditing}
-              className="cursor-pointer rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Edit days"
-            >
-              <PencilIcon className="size-3.5" />
-            </button>
-          )}
-          <button
-            onClick={() => onRemove(place.id)}
-            className="cursor-pointer rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Remove from trip"
-          >
-            <Trash2Icon className="size-3.5" />
-          </button>
-        </div>
+        <button
+          onClick={() => onRemove(place.id)}
+          className="cursor-pointer shrink-0 rounded-full p-1.5 text-muted-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Remove from trip"
+        >
+          <Trash2Icon className="size-3.5" />
+        </button>
       </div>
 
-      {/* Assigned day chips (view mode) */}
-      {!editing && assignedDays.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-          {assignedDays.map((d) => (
+      {/* Day chips (Unscheduled only) + "also on" hint (day sections) + add dropdown */}
+      <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">
+        {isUnscheduled ? (
+          // Full chip UI with × remove in Unscheduled
+          assignedDays.map((d) => (
             <span
               key={d}
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 pl-2.5 pr-1.5 py-0.5 text-xs font-medium text-primary"
             >
               Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+              <button
+                type="button"
+                onClick={() => removeDay(d)}
+                disabled={saving}
+                className="cursor-pointer rounded-full p-0.5 hover:bg-primary/20 transition-colors disabled:opacity-50"
+                aria-label={`Remove day ${d}`}
+              >
+                <XIcon className="size-2.5" />
+              </button>
             </span>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          // In a day section: show other days as a quiet hint
+          (() => {
+            const otherDays = assignedDays.filter((d) => d !== currentDay);
+            return otherDays.length > 0 ? (
+              <span className="text-xs text-muted-foreground/60">
+                Also Day {otherDays.join(", Day ")}
+              </span>
+            ) : null;
+          })()
+        )}
 
-      {/* Edit mode: day chip picker */}
-      {editing && (
-        <div className="px-4 pb-3">
-          <p className="mb-2 text-xs text-muted-foreground">Select days:</p>
-          <div className="flex flex-wrap gap-1.5">
-            {Array.from({ length: numDays }, (_, i) => i + 1).map((d) => {
-              const selected = pending.includes(d);
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => toggleDay(d)}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    selected
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  {selected && <CheckIcon className="size-3" />}
-                  Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex gap-2">
+        {availableDays.length > 0 && (
+          <div ref={dropdownRef} className="relative">
             <button
               type="button"
-              onClick={cancelEditing}
-              className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted cursor-pointer"
-            >
-              <XIcon className="size-3" /> Cancel
-            </button>
-            <button
-              type="button"
-              onClick={save}
+              onClick={openDropdown}
               disabled={saving}
-              className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-muted-foreground/30 px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary cursor-pointer disabled:opacity-50"
             >
-              <CheckIcon className="size-3" /> {saving ? "Saving…" : "Save"}
+              <CalendarPlusIcon className="size-3" />
+              Add day
             </button>
+
+            {dropdownOpen && (
+              <div className="absolute left-0 top-full z-50 mt-1.5 w-48 rounded-xl border bg-popover shadow-lg">
+                <div className="max-h-44 overflow-y-auto">
+                  {availableDays.map((d) => {
+                    const selected = pending.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => togglePending(d)}
+                        className={`flex w-full cursor-pointer items-center justify-between px-3 py-2 text-xs transition-colors ${selected ? "bg-primary/8 text-primary" : "hover:bg-accent text-foreground"}`}
+                      >
+                        <span className="font-medium">
+                          Day {d}{trip.startDate ? ` · ${dayLabel(d, trip, true)}` : ""}
+                        </span>
+                        {selected && <CheckIcon className="size-3 shrink-0 text-primary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="border-t p-2">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={confirmAdd}
+                    disabled={pending.length === 0 || saving}
+                    className="w-full cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    {saving ? "Saving…" : `Add ${pending.length > 0 ? pending.length : ""} day${pending.length !== 1 ? "s" : ""}`}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </li>
   );
 }
@@ -173,12 +211,14 @@ function PlaceList({
   places,
   trip,
   numDays,
+  currentDay,
   onDaysChange,
   onRemove,
 }: {
   places: TripPlace[];
   trip: Trip;
   numDays: number;
+  currentDay: number | null;
   onDaysChange: (placeId: string, days: number[]) => Promise<void>;
   onRemove: (placeId: string) => void;
 }) {
@@ -190,6 +230,7 @@ function PlaceList({
           place={place}
           trip={trip}
           numDays={numDays}
+          currentDay={currentDay}
           onDaysChange={onDaysChange}
           onRemove={onRemove}
         />
@@ -407,6 +448,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                         places={dayPlaces}
                         trip={trip!}
                         numDays={numDays}
+                        currentDay={day}
                         onDaysChange={handleDaysChange}
                         onRemove={handleRemovePlace}
                       />
@@ -430,6 +472,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                         places={unscheduled}
                         trip={trip!}
                         numDays={numDays}
+                        currentDay={null}
                         onDaysChange={handleDaysChange}
                         onRemove={handleRemovePlace}
                       />
