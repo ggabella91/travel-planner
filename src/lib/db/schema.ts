@@ -40,7 +40,7 @@ export const tripPlaces = pgTable("trip_places", {
   placeId: text("place_id")
     .notNull()
     .references(() => places.id, { onDelete: "cascade" }),
-  day: integer("day"), // nullable — which day of the trip, if pinned
+  days: text("days"), // JSON int array e.g. '[1,3]' — which days of the trip; null/empty = unscheduled
   order: integer("order"), // sort order within a day or unscheduled list
   note: text("note"), // trip-specific note, separate from the place's global notes
 });

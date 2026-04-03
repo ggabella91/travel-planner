@@ -29,6 +29,13 @@
       "when": 1775088830852,
       "tag": "0003_soft_triton",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1743638400000,
+      "tag": "0004_trip_places_days",
+      "breakpoints": true
     }
   ]
 }
