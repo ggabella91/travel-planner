@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast";
@@ -88,21 +89,11 @@ export function CreateTripSheet({ open, onOpenChange, onCreated }: CreateTripShe
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="trip-start">Start date</Label>
-                <Input
-                  id="trip-start"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => set("startDate", e.target.value)}
-                />
+                <DatePicker id="trip-start" value={form.startDate} onChange={(v) => set("startDate", v)} placeholder="Start date" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="trip-end">End date</Label>
-                <Input
-                  id="trip-end"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => set("endDate", e.target.value)}
-                />
+                <DatePicker id="trip-end" value={form.endDate} onChange={(v) => set("endDate", v)} placeholder="End date" />
               </div>
             </div>
 
