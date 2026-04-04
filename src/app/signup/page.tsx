@@ -46,7 +46,12 @@ export default function SignupPage() {
         setError(data.error ?? "Failed to create account");
         return;
       }
-      await signIn("credentials", { email, password, callbackUrl: "/" });
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) {
+        setError("Sign-in failed after account creation — try signing in manually");
+        return;
+      }
+      window.location.href = "/";
     } catch {
       setError("Something went wrong — try again");
     } finally {
