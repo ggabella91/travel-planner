@@ -51,3 +51,4 @@ next-env.d.ts
 *.db
 .beads-credential-key
 config.yaml
+.playwright-mcp/
