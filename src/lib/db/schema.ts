@@ -52,9 +52,17 @@ export const tripPlaces = pgTable("trip_places", {
   note: text("note"), // trip-specific note, separate from the place's global notes
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  token: text("token").primaryKey(),
+  email: text("email").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+});
+
 export type Place = typeof places.$inferSelect;
 export type NewPlace = typeof places.$inferInsert;
 export type Trip = typeof trips.$inferSelect;
 export type NewTrip = typeof trips.$inferInsert;
 export type TripPlace = typeof tripPlaces.$inferSelect;
 export type NewTripPlace = typeof tripPlaces.$inferInsert;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
