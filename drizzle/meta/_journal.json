@@ -36,6 +36,13 @@
       "when": 1743638400000,
       "tag": "0004_trip_places_days",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775331730584,
+      "tag": "0005_overconfident_mockingbird",
+      "breakpoints": true
     }
   ]
 }
