@@ -12,7 +12,7 @@ export default defineConfig({
     deviceScaleFactor: 3,
     launchOptions: {
       headless: false,
-      slowMo: 600,
+      slowMo: 150,
     },
   },
   webServer: {

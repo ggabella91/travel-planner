@@ -13,41 +13,41 @@ async function addPlace(
   opts: { name: string; city: string; country: string }
 ) {
   await page.getByRole("button", { name: /add place/i }).click();
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(300);
 
   const dialog = page.getByRole("dialog", { name: "Add a place" });
 
   // Destination hint (search bias)
   await dialog.getByRole("textbox", { name: /destination/i }).fill(opts.city);
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(200);
 
-  // Name — type, wait for autocomplete, Tab to dismiss
+  // Name — type, wait briefly for autocomplete to show, Tab to dismiss
   await dialog.getByRole("textbox", { name: /^name/i }).fill(opts.name);
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(500);
   await page.keyboard.press("Tab");
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(200);
 
   // City — fill, Tab to dismiss autocomplete
   await dialog.getByRole("textbox", { name: /^city/i }).fill(opts.city);
-  await page.waitForTimeout(800);
-  await page.keyboard.press("Tab");
   await page.waitForTimeout(400);
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(200);
 
   // Country — fill, Tab to dismiss autocomplete
   await dialog.getByRole("textbox", { name: /^country/i }).fill(opts.country);
-  await page.waitForTimeout(600);
-  await page.keyboard.press("Tab");
   await page.waitForTimeout(300);
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(150);
 
   await dialog.getByRole("button", { name: /save place/i }).click();
   await expect(dialog).not.toBeVisible({ timeout: 8000 });
 
   // Dismiss the success toast immediately so we don't wait for it to auto-hide
   const dismiss = page.getByRole("button", { name: "Dismiss" });
-  if (await dismiss.isVisible({ timeout: 800 }).catch(() => false)) {
+  if (await dismiss.isVisible({ timeout: 600 }).catch(() => false)) {
     await dismiss.click();
   }
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(200);
 }
 
 test("travel planner demo", async ({ page }) => {
@@ -56,26 +56,26 @@ test("travel planner demo", async ({ page }) => {
   await test.step("create an account", async () => {
     await page.goto("/signup");
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
 
     await page.getByRole("textbox", { name: /name/i }).fill("Demo User");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(200);
     await page.getByRole("textbox", { name: /email/i }).fill("demo@travelplanner.dev");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(200);
     await page.getByRole("textbox", { name: /^password \(min/i }).fill("DemoTravel2026");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(200);
     await page.getByRole("textbox", { name: /confirm/i }).fill("DemoTravel2026");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(200);
 
     await page.getByRole("button", { name: /create account/i }).click();
     await expect(page.getByRole("button", { name: /add place/i })).toBeVisible({ timeout: 20000 });
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
   });
 
   // ─── Scene 2: Empty state ─────────────────────────────────────────────────
   await test.step("empty places backlog", async () => {
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(800);
   });
 
   // ─── Scene 3: Add places to backlog ───────────────────────────────────────
@@ -90,61 +90,61 @@ test("travel planner demo", async ({ page }) => {
   // ─── Scene 4: Browse the backlog ──────────────────────────────────────────
   await test.step("browse the backlog", async () => {
     await page.mouse.wheel(0, 400);
-    await page.waitForTimeout(800);
-    await page.mouse.wheel(0, -400);
     await page.waitForTimeout(600);
+    await page.mouse.wheel(0, -400);
+    await page.waitForTimeout(400);
 
     // Show the filter sheet briefly
     await page.getByRole("button", { name: /filter places/i }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(700);
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(400);
   });
 
   // ─── Scene 5: Create a trip ───────────────────────────────────────────────
   await test.step("create a trip", async () => {
     await page.getByRole("link", { name: /trips/i }).click();
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
 
     await page.getByRole("button", { name: /new trip/i }).click();
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(400);
 
     const dialog = page.getByRole("dialog", { name: "New trip" });
 
     await dialog.getByRole("textbox", { name: /^name/i }).fill("Tokyo Spring 2026");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(300);
 
     await dialog.getByRole("textbox", { name: /^city/i }).fill("Tokyo");
-    await page.waitForTimeout(800);
-    await page.keyboard.press("Tab");
     await page.waitForTimeout(400);
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(300);
 
     // Start date — calendar opens, pick a day
     await dialog.getByRole("button", { name: /start date/i }).click();
-    await page.waitForTimeout(500);
-    await page.getByRole("button", { name: "10" }).click();
     await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "10" }).click();
+    await page.waitForTimeout(300);
 
     // End date
     await dialog.getByRole("button", { name: /end date/i }).click();
-    await page.waitForTimeout(500);
-    await page.getByRole("button", { name: "17" }).click();
     await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "17" }).click();
+    await page.waitForTimeout(300);
 
     await dialog.getByRole("button", { name: /create trip/i }).click();
     await expect(page.getByText("Tokyo Spring 2026")).toBeVisible({ timeout: 8000 });
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
   });
 
   // ─── Scene 6: Open trip and add places from backlog ───────────────────────
   await test.step("open trip and add places from backlog", async () => {
     await page.getByText("Tokyo Spring 2026").click();
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(600);
 
     await page.getByRole("button", { name: "Add places" }).click();
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(400);
 
     const sheet = page.getByRole("dialog", { name: "Add places" });
 
@@ -152,60 +152,60 @@ test("travel planner demo", async ({ page }) => {
       const btn = sheet.getByRole("button", { name: new RegExp(name) });
       if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
         await btn.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(350);
       }
     }
 
     await sheet.getByRole("button", { name: "Close" }).click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(500);
   });
 
   // ─── Scene 7: Assign days ─────────────────────────────────────────────────
   await test.step("assign places to days", async () => {
     await page.getByText("Unscheduled").scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(400);
 
     // Assign first place to Day 1
     await page.getByRole("button", { name: "Add day" }).first().click();
-    await page.waitForTimeout(400);
-    await page.locator("button").filter({ hasText: /Day 1 ·/ }).first().click();
     await page.waitForTimeout(300);
+    await page.locator("button").filter({ hasText: /Day 1 ·/ }).first().click();
+    await page.waitForTimeout(200);
     await page.locator("button").filter({ hasText: /Add \d+ day/ }).click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(500);
 
     // Assign second place to Day 2
     await page.getByRole("button", { name: "Add day" }).first().click();
-    await page.waitForTimeout(400);
-    await page.locator("button").filter({ hasText: /Day 2 ·/ }).first().click();
     await page.waitForTimeout(300);
+    await page.locator("button").filter({ hasText: /Day 2 ·/ }).first().click();
+    await page.waitForTimeout(200);
     await page.locator("button").filter({ hasText: /Add \d+ day/ }).click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(500);
 
     // Assign third place to Day 3
     await page.getByRole("button", { name: "Add day" }).first().click();
-    await page.waitForTimeout(400);
-    await page.locator("button").filter({ hasText: /Day 3 ·/ }).first().click();
     await page.waitForTimeout(300);
+    await page.locator("button").filter({ hasText: /Day 3 ·/ }).first().click();
+    await page.waitForTimeout(200);
     await page.locator("button").filter({ hasText: /Add \d+ day/ }).click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(500);
   });
 
   // ─── Scene 8: Browse the itinerary ────────────────────────────────────────
   await test.step("browse day-by-day itinerary", async () => {
     await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(800);
-    await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(800);
-    await page.mouse.wheel(0, -1000);
     await page.waitForTimeout(600);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(600);
+    await page.mouse.wheel(0, -1000);
+    await page.waitForTimeout(500);
   });
 
   // ─── Scene 9: Account settings ────────────────────────────────────────────
   await test.step("view account settings", async () => {
     await page.getByRole("link", { name: /account/i }).click();
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(800);
     await expect(page.getByText(/sign-in methods/i)).toBeVisible();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(800);
   });
 });
