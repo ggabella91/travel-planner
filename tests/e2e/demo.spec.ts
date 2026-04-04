@@ -41,7 +41,13 @@ async function addPlace(
 
   await dialog.getByRole("button", { name: /save place/i }).click();
   await expect(dialog).not.toBeVisible({ timeout: 8000 });
-  await page.waitForTimeout(600);
+
+  // Dismiss the success toast immediately so we don't wait for it to auto-hide
+  const dismiss = page.getByRole("button", { name: "Dismiss" });
+  if (await dismiss.isVisible({ timeout: 800 }).catch(() => false)) {
+    await dismiss.click();
+  }
+  await page.waitForTimeout(300);
 }
 
 test("travel planner demo", async ({ page }) => {
