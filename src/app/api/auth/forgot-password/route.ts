@@ -30,20 +30,26 @@ export async function POST(req: NextRequest) {
   const baseUrl = new URL(req.url).origin;
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
-  await resend.emails.send({
-    from: process.env.RESEND_FROM!,
-    to: email,
-    subject: "Reset your Travel Planner password",
-    text: [
-      "You requested a password reset.",
-      "",
-      "Click the link below to reset your password (expires in 1 hour):",
-      "",
-      resetUrl,
-      "",
-      "If you didn't request this, you can safely ignore this email.",
-    ].join("\n"),
-  });
+  try {
+    await resend.emails.send({
+      from: process.env.RESEND_FROM!,
+      to: email,
+      subject: "Reset your Travel Planner password",
+      text: [
+        "You requested a password reset.",
+        "",
+        "Click the link below to reset your password (expires in 1 hour):",
+        "",
+        resetUrl,
+        "",
+        "If you didn't request this, you can safely ignore this email.",
+      ].join("\n"),
+    });
+  } catch (err) {
+    console.error("Failed to send password reset email:", err);
+    // Delete the token so it doesn't accumulate in the DB unused
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  }
 
   return Response.json({ ok: true });
 }
