@@ -35,11 +35,13 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await hash(password, 12);
 
-  await db.update(users).set({ passwordHash }).where(eq(users.email, record.email));
-  await db
-    .update(passwordResetTokens)
-    .set({ usedAt: new Date() })
-    .where(eq(passwordResetTokens.token, token));
+  await db.transaction(async (tx) => {
+    await tx.update(users).set({ passwordHash }).where(eq(users.email, record.email));
+    await tx
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.token, token));
+  });
 
   return Response.json({ ok: true });
 }
