@@ -21,19 +21,19 @@ async function addPlace(
   await dialog.getByRole("textbox", { name: /destination/i }).fill(opts.city);
   await page.waitForTimeout(200);
 
-  // Name — type, wait briefly for autocomplete to show, Tab to dismiss
+  // Name — wait long enough for autocomplete dropdown to appear
   await dialog.getByRole("textbox", { name: /^name/i }).fill(opts.name);
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(900);
   await page.keyboard.press("Tab");
   await page.waitForTimeout(200);
 
-  // City — fill, Tab to dismiss autocomplete
+  // City — wait for autocomplete dropdown to appear
   await dialog.getByRole("textbox", { name: /^city/i }).fill(opts.city);
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(700);
   await page.keyboard.press("Tab");
   await page.waitForTimeout(200);
 
-  // Country — fill, Tab to dismiss autocomplete
+  // Country — shorter, no autocomplete needed
   await dialog.getByRole("textbox", { name: /^country/i }).fill(opts.country);
   await page.waitForTimeout(300);
   await page.keyboard.press("Tab");
@@ -42,12 +42,14 @@ async function addPlace(
   await dialog.getByRole("button", { name: /save place/i }).click();
   await expect(dialog).not.toBeVisible({ timeout: 8000 });
 
-  // Dismiss the success toast immediately so we don't wait for it to auto-hide
+  // Wait for toast to appear then immediately dismiss it
   const dismiss = page.getByRole("button", { name: "Dismiss" });
-  if (await dismiss.isVisible({ timeout: 600 }).catch(() => false)) {
+  await dismiss.waitFor({ state: "visible", timeout: 2000 }).catch(() => null);
+  if (await dismiss.isVisible().catch(() => false)) {
     await dismiss.click();
+    await dismiss.waitFor({ state: "hidden", timeout: 1000 }).catch(() => null);
   }
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(150);
 }
 
 test("travel planner demo", async ({ page }) => {
