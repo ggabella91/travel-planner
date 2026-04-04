@@ -1,19 +1,24 @@
 import { defineConfig } from "@playwright/test";
-import base from "./playwright.config";
 
-// Demo mode: headed browser, slow motion, mobile viewport for visual appeal.
-// Usage: npm run demo
-// Tip: start a screen recording before running.
 export default defineConfig({
-  ...base,
+  testDir: "./tests/e2e",
+  timeout: 180000,
+  fullyParallel: false,
+  workers: 1,
+  reporter: "list",
   use: {
-    ...base.use,
-    // iPhone 14 Pro — matches the app's mobile-first design
+    baseURL: "http://localhost:3000",
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
     launchOptions: {
       headless: false,
       slowMo: 600,
     },
+  },
+  webServer: {
+    command: "npm run dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: true,
+    timeout: 30000,
   },
 });
