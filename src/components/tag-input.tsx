@@ -14,10 +14,12 @@ export function TagInput({ value, onChange }: TagInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/places/tags")
+    const controller = new AbortController();
+    fetch("/api/places/tags", { signal: controller.signal })
       .then((r) => r.json())
       .then((tags: string[]) => setAllSuggestions(Array.isArray(tags) ? tags : []))
       .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   const filteredSuggestions = inputValue.trim()
