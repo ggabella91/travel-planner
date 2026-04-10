@@ -29,6 +29,8 @@ import { CATEGORIES, SOURCES, SOURCE_LABELS, STATUSES, RATINGS } from "@/app/pla
 import { usePlacePhoto } from "@/app/places/hooks/use-place-photo";
 import { toast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TagInput } from "@/components/tag-input";
+import { parseTags } from "@/lib/tags";
 
 interface PlaceDetailSheetProps {
   place: Place | null;
@@ -43,6 +45,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Partial<Place>>({});
+  const [editTags, setEditTags] = useState<string[]>([]);
 
   const photo = usePlacePhoto(place?.name, place?.city);
 
@@ -60,12 +63,14 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       status: place.status,
       rating: place.rating ?? undefined,
     });
+    setEditTags(parseTags(place.tags));
     setEditing(true);
   }
 
   function cancelEditing() {
     setEditing(false);
     setForm({});
+    setEditTags([]);
   }
 
   function set(field: keyof Place, value: string | number | null) {
@@ -80,7 +85,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       const res = await fetch(`/api/places/${place.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, tags: editTags }),
       });
       if (!res.ok) throw new Error("Failed to save");
       setEditing(false);
@@ -201,6 +206,19 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
               <div className="flex flex-col gap-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">Notes</p>
                 <p className="text-sm leading-relaxed">{place.notes}</p>
+              </div>
+            )}
+
+            {parseTags(place.tags).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {parseTags(place.tags).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -371,6 +389,11 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
                   rows={3}
                   className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Tags</Label>
+                <TagInput value={editTags} onChange={setEditTags} />
               </div>
 
               <div className="flex flex-col gap-1.5">
