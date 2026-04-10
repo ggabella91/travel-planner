@@ -92,7 +92,7 @@ export default function HomePage() {
       if (filterCity !== "all" && p.city !== filterCity) return false;
       if (filterTags.length > 0) {
         const placeTags = parseTags(p.tags);
-        if (!filterTags.some((t) => placeTags.includes(t))) return false;
+        if (!filterTags.some((t) => placeTags.some((pt) => pt.toLowerCase() === t.toLowerCase()))) return false;
       }
       if (q) {
         const haystack = `${p.name} ${p.city} ${p.notes ?? ""}`.toLowerCase();

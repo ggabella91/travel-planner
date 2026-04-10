@@ -210,18 +210,21 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
               </div>
             )}
 
-            {parseTags(place.tags).length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {parseTags(place.tags).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const viewTags = parseTags(place.tags);
+              return viewTags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {viewTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null;
+            })()}
 
             {place.source && (
               <div className="flex flex-col gap-1">
