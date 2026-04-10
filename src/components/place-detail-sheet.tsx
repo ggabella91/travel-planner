@@ -90,6 +90,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       if (!res.ok) throw new Error("Failed to save");
       setEditing(false);
       setForm({});
+      setEditTags([]);
       onUpdated();
       toast.success("Place updated");
     } catch {
