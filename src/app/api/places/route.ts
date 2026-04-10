@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   if (!session?.user?.email) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { name, city, state, country, category, notes, source, url, externalId, externalSource } = body;
+  const { name, city, state, country, category, notes, source, url, externalId, externalSource, tags } = body;
 
   if (!name || !city || !country) {
     return Response.json(
@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       url,
       externalId: externalId || null,
       externalSource: externalSource || null,
+      tags: Array.isArray(tags) && tags.length > 0 ? JSON.stringify(tags) : null,
     })
     .returning();
 
