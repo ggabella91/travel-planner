@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const { id } = await ctx.params;
   const body = await req.json();
-  const { name, city, state, country, category, notes, source, url, status, rating } = body;
+  const { name, city, state, country, category, notes, source, url, status, rating, tags } = body;
 
   if (!name || !city || !country) {
     return Response.json({ error: "name, city, and country are required" }, { status: 400 });
@@ -29,6 +29,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       url: url || null,
       status: status || "backlog",
       rating: rating ? Number(rating) : null,
+      ...(tags !== undefined && { tags: Array.isArray(tags) ? JSON.stringify(tags) : null }),
       updatedAt: new Date(),
     })
     .where(and(eq(places.id, id), eq(places.userId, session.user.email)))
