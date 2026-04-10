@@ -20,6 +20,7 @@ import {
 import { getFlag } from "@/lib/flags";
 import { STATUS_DOT } from "@/app/places/constants";
 import { usePlaces } from "@/app/places/hooks/use-places";
+import { parseTags } from "@/lib/tags";
 
 
 function PlacesSkeleton() {
@@ -210,6 +211,18 @@ export default function HomePage() {
                         <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {place.notes}
                         </p>
+                      )}
+                      {parseTags(place.tags).length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {parseTags(place.tags).map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <div
