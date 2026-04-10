@@ -89,6 +89,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
       }
       if (!res.ok) throw new Error("Failed to save");
       setForm(EMPTY_FORM);
+      setTags([]);
       onOpenChange(false);
       onAdded();
       toast.success("Place saved");
