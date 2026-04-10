@@ -67,6 +67,7 @@ export default function HomePage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterCity, setFilterCity] = useState("all");
+  const [filterTags, setFilterTags] = useState<string[]>([]);
 
   const cities = useMemo(
     () => [...new Set(places.map((p) => p.city))].sort(),
@@ -78,24 +79,34 @@ export default function HomePage() {
     [places],
   );
 
+  const tags = useMemo(
+    () => [...new Set(places.flatMap((p) => parseTags(p.tags)))].sort(),
+    [places],
+  );
+
   const filteredPlaces = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return places.filter((p) => {
       if (filterStatus !== "all" && p.status !== filterStatus) return false;
       if (filterCategory !== "all" && p.category !== filterCategory) return false;
       if (filterCity !== "all" && p.city !== filterCity) return false;
+      if (filterTags.length > 0) {
+        const placeTags = parseTags(p.tags);
+        if (!filterTags.some((t) => placeTags.includes(t))) return false;
+      }
       if (q) {
         const haystack = `${p.name} ${p.city} ${p.notes ?? ""}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
     });
-  }, [places, filterStatus, filterCategory, filterCity, searchQuery]);
+  }, [places, filterStatus, filterCategory, filterCity, filterTags, searchQuery]);
 
   const activeFilterCount =
     (filterStatus !== "all" ? 1 : 0) +
     (filterCategory !== "all" ? 1 : 0) +
-    (filterCity !== "all" ? 1 : 0);
+    (filterCity !== "all" ? 1 : 0) +
+    (filterTags.length > 0 ? 1 : 0);
 
   return (
     <div className="min-h-screen">
@@ -283,12 +294,20 @@ export default function HomePage() {
         filterStatus={filterStatus}
         filterCategory={filterCategory}
         filterCity={filterCity}
+        filterTags={filterTags}
         onFilterStatus={setFilterStatus}
         onFilterCategory={setFilterCategory}
         onFilterCity={setFilterCity}
-        onReset={() => { setFilterStatus("all"); setFilterCategory("all"); setFilterCity("all"); }}
+        onFilterTags={setFilterTags}
+        onReset={() => {
+          setFilterStatus("all");
+          setFilterCategory("all");
+          setFilterCity("all");
+          setFilterTags([]);
+        }}
         categories={categories}
         cities={cities}
+        tags={tags}
       />
 
       <PlaceDetailSheet

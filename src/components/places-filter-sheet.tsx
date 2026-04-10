@@ -24,9 +24,12 @@ interface PlacesFilterSheetProps {
   onFilterStatus: (v: string) => void;
   onFilterCategory: (v: string) => void;
   onFilterCity: (v: string) => void;
+  filterTags: string[];
+  onFilterTags: (tags: string[]) => void;
   onReset: () => void;
   categories: string[];
   cities: string[];
+  tags: string[];
 }
 
 function FilterSection({ label, children }: { label: string; children: React.ReactNode }) {
@@ -71,15 +74,18 @@ export function PlacesFilterSheet({
   filterStatus,
   filterCategory,
   filterCity,
+  filterTags,
   onFilterStatus,
   onFilterCategory,
   onFilterCity,
+  onFilterTags,
   onReset,
   categories,
   cities,
+  tags,
 }: PlacesFilterSheetProps) {
   const hasActiveFilters =
-    filterStatus !== "all" || filterCategory !== "all" || filterCity !== "all";
+    filterStatus !== "all" || filterCategory !== "all" || filterCity !== "all" || filterTags.length > 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -143,6 +149,27 @@ export function PlacesFilterSheet({
                 {cities.map((city) => (
                   <Chip key={city} active={filterCity === city} onClick={() => onFilterCity(city)}>
                     {city}
+                  </Chip>
+                ))}
+              </FilterSection>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <FilterSection label="Tags">
+                {tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    active={filterTags.includes(tag)}
+                    onClick={() =>
+                      onFilterTags(
+                        filterTags.includes(tag)
+                          ? filterTags.filter((t) => t !== tag)
+                          : [...filterTags, tag],
+                      )
+                    }
+                  >
+                    {tag}
                   </Chip>
                 ))}
               </FilterSection>
