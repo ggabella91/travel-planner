@@ -212,18 +212,21 @@ export default function HomePage() {
                           {place.notes}
                         </p>
                       )}
-                      {parseTags(place.tags).length > 0 && (
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {parseTags(place.tags).map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      {(() => {
+                        const cardTags = parseTags(place.tags);
+                        return cardTags.length > 0 ? (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {cardTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                     <div
                       className="flex gap-1 border-t border-border/40 px-3 py-2"
