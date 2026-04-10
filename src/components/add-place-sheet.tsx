@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { AlertCircleIcon } from "lucide-react";
 
+import { TagInput } from "@/components/tag-input";
 import { CATEGORIES, SOURCES } from "@/app/places/constants";
 import { toast } from "@/lib/toast";
 import type { FoursquareSuggestion } from "@/lib/foursquare";
@@ -49,6 +50,7 @@ const EMPTY_FORM = {
 export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceSheetProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [tags, setTags] = useState<string[]>([]);
   const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
   const [nearInput, setNearInput] = useState("");
 
@@ -78,7 +80,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
       const res = await fetch("/api/places", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, tags }),
       });
       if (res.status === 409) {
         const data = await res.json();
@@ -102,6 +104,7 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
       setForm(EMPTY_FORM);
       setDuplicate(null);
       setNearInput("");
+      setTags([]);
     }
     onOpenChange(o);
   }
@@ -273,6 +276,11 @@ export function AddPlaceSheet({ open, onOpenChange, onAdded, near }: AddPlaceShe
                 rows={3}
                 className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
               />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Tags</Label>
+              <TagInput value={tags} onChange={setTags} />
             </div>
 
             <div className="flex flex-col gap-1.5">
