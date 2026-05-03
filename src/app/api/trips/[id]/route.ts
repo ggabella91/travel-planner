@@ -28,15 +28,27 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const body = await req.json();
   const { name, cities, startDate, endDate, status, notes } = body;
 
+  const VALID_STATUSES = ["planning", "active", "done"];
   if (!name || !cities) {
     return Response.json({ error: "name and cities are required" }, { status: 400 });
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    return Response.json({ error: "invalid status" }, { status: 400 });
+  }
+  let citiesJson: string;
+  try {
+    const parsed = JSON.parse(cities);
+    if (!Array.isArray(parsed)) throw new Error();
+    citiesJson = JSON.stringify(parsed);
+  } catch {
+    return Response.json({ error: "cities must be a valid JSON array" }, { status: 400 });
   }
 
   const [trip] = await db
     .update(trips)
     .set({
       name,
-      cities,
+      cities: citiesJson,
       startDate: startDate || null,
       endDate: endDate || null,
       status: status || "planning",

@@ -13,7 +13,7 @@ const tabs = [
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (pathname === "/login" || pathname === "/signup") return null;
+  if (["/login", "/signup", "/forgot-password", "/reset-password"].includes(pathname)) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur-sm [padding-bottom:env(safe-area-inset-bottom)]">

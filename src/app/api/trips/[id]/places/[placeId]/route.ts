@@ -21,7 +21,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!owned) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
-  const days: number[] = Array.isArray(body.days) ? body.days.map(Number) : [];
+  const rawDays: number[] = Array.isArray(body.days) ? body.days.map(Number) : [];
+  if (rawDays.some((d) => !Number.isInteger(d) || d < 1)) {
+    return Response.json({ error: "days must be positive integers" }, { status: 400 });
+  }
+  const days = rawDays;
 
   const [row] = await db
     .update(tripPlaces)

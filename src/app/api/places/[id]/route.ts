@@ -12,8 +12,16 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const body = await req.json();
   const { name, city, state, country, category, notes, source, url, status, rating, tags } = body;
 
+  const VALID_STATUSES = ["backlog", "visited", "skipped"];
   if (!name || !city || !country) {
     return Response.json({ error: "name, city, and country are required" }, { status: 400 });
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    return Response.json({ error: "invalid status" }, { status: 400 });
+  }
+  const ratingNum = rating != null ? Number(rating) : null;
+  if (ratingNum !== null && (ratingNum < 1 || ratingNum > 5 || !Number.isInteger(ratingNum))) {
+    return Response.json({ error: "rating must be an integer between 1 and 5" }, { status: 400 });
   }
 
   const [place] = await db
@@ -28,7 +36,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       source: source || null,
       url: url || null,
       status: status || "backlog",
-      rating: rating ? Number(rating) : null,
+      rating: ratingNum,
       ...(tags !== undefined && { tags: Array.isArray(tags) ? JSON.stringify(tags) : null }),
       updatedAt: new Date(),
     })

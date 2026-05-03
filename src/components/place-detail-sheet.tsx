@@ -353,7 +353,10 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label>Status</Label>
-                  <Select value={form.status ?? "backlog"} onValueChange={(v) => set("status", v ?? "backlog")}>
+                  <Select value={form.status ?? "backlog"} onValueChange={(v) => {
+                  set("status", v ?? "backlog");
+                  if (v !== "visited") set("rating", null);
+                }}>
                     <SelectTrigger className="w-full">
                       <SelectValue className="capitalize" />
                     </SelectTrigger>
