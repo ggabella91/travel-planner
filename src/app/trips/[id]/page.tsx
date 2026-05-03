@@ -11,8 +11,9 @@ import { AddPlaceSheet } from "@/components/add-place-sheet";
 import { AddPlacesSheet } from "./components/add-places-sheet";
 import { useTripPlaces } from "./hooks/use-trip-places";
 import type { TripPlace } from "./hooks/use-trip-places";
+import { useTripById } from "./hooks/use-trip-by-id";
 import { useCityPhoto } from "../hooks/use-city-photo";
-import { useTrips } from "../hooks/use-trips";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { usePlaces } from "@/app/places/hooks/use-places";
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS } from "../constants";
 import { CATEGORY_ICONS } from "@/lib/categories";
@@ -245,17 +246,18 @@ function PlaceList({
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
-  const { trips, loading: tripsLoading, reload: reloadTrips } = useTrips();
+  const { trip, loading: tripLoading, reload: reloadTrip } = useTripById(id);
   const { places } = usePlaces();
   const { tripPlaces, loading: placesLoading, reload: reloadTripPlaces } = useTripPlaces(id);
 
-  const trip = trips.find((t) => t.id === id);
   const cities: string[] = trip ? JSON.parse(trip.cities) : [];
   const photo = useCityPhoto(cities[0]);
 
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addNewOpen, setAddNewOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const addedPlaceIds = useMemo(
     () => new Set(tripPlaces.map((p) => p.id)),
@@ -302,13 +304,17 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   async function handleRemovePlace(placeId: string) {
+    setRemoving(true);
     try {
       const res = await fetch(`/api/trips/${id}/places/${placeId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      setConfirmRemove(null);
       reloadTripPlaces();
       toast.success("Place removed");
     } catch {
       toast.error("Failed to remove — try again");
+    } finally {
+      setRemoving(false);
     }
   }
 
@@ -325,7 +331,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     reloadTripPlaces();
   }, [id, reloadTripPlaces]);
 
-  if (tripsLoading) {
+  if (tripLoading) {
     return (
       <div className="min-h-screen">
         <div className="h-48 w-full bg-muted animate-pulse" />
@@ -453,7 +459,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                         numDays={numDays}
                         currentDay={day}
                         onDaysChange={handleDaysChange}
-                        onRemove={handleRemovePlace}
+                        onRemove={setConfirmRemove}
                       />
                     )}
                   </div>
@@ -477,7 +483,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                         numDays={numDays}
                         currentDay={null}
                         onDaysChange={handleDaysChange}
-                        onRemove={handleRemovePlace}
+                        onRemove={setConfirmRemove}
                       />
                     )}
                   </div>
@@ -504,7 +510,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         trip={trip}
         open={editOpen}
         onOpenChange={setEditOpen}
-        onUpdated={() => { reloadTrips(); setEditOpen(false); }}
+        onUpdated={() => { reloadTrip(); setEditOpen(false); }}
         initialEditing
       />
 
@@ -524,6 +530,15 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         onOpenChange={setAddNewOpen}
         onAdded={() => { reloadTripPlaces(); }}
         near={cities[0]}
+      />
+
+      <ConfirmDialog
+        open={confirmRemove !== null}
+        onOpenChange={(o) => { if (!o) setConfirmRemove(null); }}
+        title="Remove from trip?"
+        description="This will unlink this place from your trip. You can add it back at any time."
+        onConfirm={() => { if (confirmRemove) handleRemovePlace(confirmRemove); }}
+        loading={removing}
       />
     </div>
   );

@@ -76,7 +76,10 @@ export async function GET(request: Request) {
       if (results.length >= 8) break;
     }
 
-    return Response.json(results);
+    // Cache at the CDN — Nominatim ToS requires caching; query string is part of cache key
+    return Response.json(results, {
+      headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },
+    });
   } catch {
     return Response.json([]);
   }

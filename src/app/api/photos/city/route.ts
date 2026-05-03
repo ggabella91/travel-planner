@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(
       `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=1&orientation=landscape`,
-      {
-        headers: { Authorization: `Client-ID ${key}` },
-        next: { revalidate: 86400 },
-      },
+      { headers: { Authorization: `Client-ID ${key}` } },
     );
 
     if (!res.ok) return Response.json({ error: "upstream error" }, { status: 502 });
@@ -22,12 +19,10 @@ export async function GET(request: NextRequest) {
     const photo = data.results?.[0];
     if (!photo) return Response.json(null);
 
-    return Response.json({
-      url: photo.urls.regular,
-      color: photo.color,
-      photographer: photo.user.name,
-      photoLink: photo.links.html,
-    });
+    return Response.json(
+      { url: photo.urls.regular, color: photo.color, photographer: photo.user.name, photoLink: photo.links.html },
+      { headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" } },
+    );
   } catch {
     return Response.json({ error: "fetch failed" }, { status: 502 });
   }

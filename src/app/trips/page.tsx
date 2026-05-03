@@ -102,7 +102,15 @@ export default function TripsPage() {
             </div>
 
             {filteredTrips.length === 0 ? (
-              <p className="pt-16 text-center text-sm text-muted-foreground">No trips match your filters.</p>
+              <div className="flex flex-col items-center gap-2 pt-16 text-center">
+                <p className="text-sm text-muted-foreground">No trips match your filters.</p>
+                <button
+                  onClick={() => setFilterStatus("all")}
+                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                >
+                  Clear filter
+                </button>
+              </div>
             ) : (
               <ul className="flex flex-col gap-3">
                 {filteredTrips.map((trip) => (

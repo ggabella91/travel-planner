@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
-  const [user] = await db.select().from(users).where(eq(users.email, email));
+  const [user] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.email, email));
 
   // If a password is already set, require the current password before changing it
   if (user?.passwordHash) {
