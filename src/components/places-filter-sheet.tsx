@@ -157,6 +157,11 @@ export function PlacesFilterSheet({
             {/* Tags */}
             {tags.length > 0 && (
               <FilterSection label="Tags">
+                {filterTags.length > 0 && (
+                  <Chip active={false} onClick={() => onFilterTags([])}>
+                    Clear
+                  </Chip>
+                )}
                 {tags.map((tag) => (
                   <Chip
                     key={tag}
