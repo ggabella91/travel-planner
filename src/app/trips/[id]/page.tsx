@@ -246,9 +246,9 @@ function PlaceList({
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
-  const { trip, loading: tripLoading, reload: reloadTrip } = useTripById(id);
+  const { trip, loading: tripLoading, error: tripError, reload: reloadTrip } = useTripById(id);
   const { places } = usePlaces();
-  const { tripPlaces, loading: placesLoading, reload: reloadTripPlaces } = useTripPlaces(id);
+  const { tripPlaces, loading: placesLoading, error: placesError, reload: reloadTripPlaces } = useTripPlaces(id);
 
   const cities: string[] = trip ? JSON.parse(trip.cities) : [];
   const photo = useCityPhoto(cities[0]);
@@ -343,11 +343,17 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  if (!trip) {
+  if (tripError || (!tripLoading && !trip)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-sm text-muted-foreground">Trip not found.</p>
-        <Link href="/trips" className="text-sm text-primary underline">Back to trips</Link>
+        <p className="text-sm text-muted-foreground">{tripError ? "Failed to load trip." : "Trip not found."}</p>
+        {tripError ? (
+          <button onClick={reloadTrip} className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            Try again
+          </button>
+        ) : (
+          <Link href="/trips" className="text-sm text-primary underline">Back to trips</Link>
+        )}
       </div>
     );
   }
@@ -434,6 +440,13 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           {placesLoading ? (
             <div className="flex flex-col gap-2">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+            </div>
+          ) : placesError ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <p className="text-sm text-muted-foreground">Failed to load places.</p>
+              <button onClick={reloadTripPlaces} className="cursor-pointer text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                Try again
+              </button>
             </div>
           ) : tripPlaces.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">

@@ -8,15 +8,22 @@ export type TripPlace = Place & { tripPlace: { id: string; days: number[]; order
 export function useTripPlaces(tripId: string) {
   const [tripPlaces, setTripPlaces] = useState<TripPlace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const mountedRef = useRef(true);
 
   const load = useCallback(() => {
     setLoading(true);
+    setError(false);
     fetch(`/api/trips/${tripId}/places`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: TripPlace[] | null) => {
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: TripPlace[]) => {
         if (!mountedRef.current) return;
-        if (data) setTripPlaces(data);
+        setTripPlaces(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!mountedRef.current) return;
+        setError(true);
         setLoading(false);
       });
   }, [tripId]);
@@ -27,5 +34,5 @@ export function useTripPlaces(tripId: string) {
     return () => { mountedRef.current = false; };
   }, [load]);
 
-  return { tripPlaces, loading, reload: load };
+  return { tripPlaces, loading, error, reload: load };
 }

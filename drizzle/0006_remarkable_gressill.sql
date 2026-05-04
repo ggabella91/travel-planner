@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "trip_places_trip_id_place_id_idx" ON "trip_places" USING btree ("trip_id","place_id");

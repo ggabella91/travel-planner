@@ -1,16 +1,9 @@
 import { db } from "@/lib/db";
-import { trips, tripPlaces } from "@/lib/db/schema";
+import { tripPlaces } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
-
-async function verifyTripOwnership(tripId: string, email: string) {
-  const [trip] = await db
-    .select({ id: trips.id })
-    .from(trips)
-    .where(and(eq(trips.id, tripId), eq(trips.userId, email)));
-  return !!trip;
-}
+import { verifyTripOwnership } from "../verify-ownership";
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string; placeId: string }> }) {
   const session = await auth();

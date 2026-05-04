@@ -44,7 +44,7 @@ function PlacesSkeleton() {
 }
 
 export default function HomePage() {
-  const { places, loading, reload } = usePlaces();
+  const { places, loading, error, reload } = usePlaces();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,6 +165,13 @@ export default function HomePage() {
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
         {loading ? (
           <PlacesSkeleton />
+        ) : error ? (
+          <div className="flex flex-col items-center gap-3 pt-20 text-center">
+            <p className="text-sm text-muted-foreground">Failed to load places.</p>
+            <button onClick={reload} className="cursor-pointer text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+              Try again
+            </button>
+          </div>
         ) : places.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
             <div className="relative flex size-24 items-center justify-center">

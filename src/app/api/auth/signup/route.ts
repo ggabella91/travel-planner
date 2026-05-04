@@ -3,8 +3,14 @@ import { users, places } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import type { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!rateLimit(`signup:${ip}`, 10, 60 * 60 * 1000)) {
+    return Response.json({ error: "Too many requests — try again later" }, { status: 429 });
+  }
+
   const { email, password, name } = await req.json();
 
   if (!email || !password) {

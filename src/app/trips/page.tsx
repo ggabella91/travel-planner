@@ -28,7 +28,7 @@ function TripsSkeleton() {
 }
 
 export default function TripsPage() {
-  const { trips, loading, reload } = useTrips();
+  const { trips, loading, error, reload } = useTrips();
   const [createOpen, setCreateOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -58,6 +58,13 @@ export default function TripsPage() {
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
         {loading ? (
           <TripsSkeleton />
+        ) : error ? (
+          <div className="flex flex-col items-center gap-3 pt-20 text-center">
+            <p className="text-sm text-muted-foreground">Failed to load trips.</p>
+            <button onClick={reload} className="cursor-pointer text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+              Try again
+            </button>
+          </div>
         ) : trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 pt-20 text-center">
             <div className="relative flex size-24 items-center justify-center">

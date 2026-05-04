@@ -3,10 +3,16 @@ import { users, passwordResetTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import type { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!rateLimit(`forgot-password:${ip}`, 5, 15 * 60 * 1000)) {
+    return Response.json({ error: "Too many requests — try again later" }, { status: 429 });
+  }
+
   const body = await req.json();
   const email = body?.email;
 

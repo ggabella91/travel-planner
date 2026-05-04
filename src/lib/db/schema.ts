@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   email: text("email").primaryKey(),
@@ -50,7 +50,9 @@ export const tripPlaces = pgTable("trip_places", {
   days: text("days"), // JSON int array e.g. '[1,3]' — which days of the trip; null/empty = unscheduled
   order: integer("order"), // sort order within a day or unscheduled list
   note: text("note"), // trip-specific note, separate from the place's global notes
-});
+}, (t) => [
+  uniqueIndex("trip_places_trip_id_place_id_idx").on(t.tripId, t.placeId),
+]);
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   token: text("token").primaryKey(),

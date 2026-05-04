@@ -12,17 +12,22 @@ export function invalidateTripsCache() { cache = null; }
 export function useTrips() {
   const [trips, setTrips] = useState<TripWithStats[]>(cache ?? []);
   const [loading, setLoading] = useState(cache === null);
+  const [error, setError] = useState(false);
   const mountedRef = useRef(true);
 
   const load = useCallback(() => {
+    setError(false);
     fetch("/api/trips")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: TripWithStats[] | null) => {
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: TripWithStats[]) => {
         if (!mountedRef.current) return;
-        if (data) {
-          cache = data;
-          setTrips(data);
-        }
+        cache = data;
+        setTrips(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!mountedRef.current) return;
+        setError(true);
         setLoading(false);
       });
   }, []);
@@ -33,5 +38,5 @@ export function useTrips() {
     return () => { mountedRef.current = false; };
   }, [load]);
 
-  return { trips, loading, reload: load };
+  return { trips, loading, error, reload: load };
 }
