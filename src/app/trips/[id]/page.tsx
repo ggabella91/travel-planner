@@ -121,7 +121,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  if (tripError || (!tripLoading && !trip)) {
+  if (tripError || !trip) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-sm text-muted-foreground">{tripError ? "Failed to load trip." : "Trip not found."}</p>
