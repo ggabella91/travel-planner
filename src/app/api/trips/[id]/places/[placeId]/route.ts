@@ -3,7 +3,7 @@ import { tripPlaces } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { verifyTripOwnership } from "../verify-ownership";
+import { verifyTripOwnership } from "../../verify-ownership";
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string; placeId: string }> }) {
   const session = await auth();
