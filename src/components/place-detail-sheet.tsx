@@ -11,25 +11,16 @@ import {
 import { Modal, ModalClose, ModalContent, ModalTitle } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ExternalLinkIcon, PencilIcon, XIcon } from "lucide-react";
 import type { Place } from "@/lib/db/schema";
 import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_COLORS } from "@/lib/categories";
 import { getFlag } from "@/lib/flags";
-import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { CATEGORIES, SOURCES, SOURCE_LABELS, STATUSES, RATINGS } from "@/app/places/constants";
+import { SOURCE_LABELS } from "@/app/places/constants";
 import { usePlacePhoto } from "@/app/places/hooks/use-place-photo";
 import { toast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TagInput } from "@/components/tag-input";
+import { PlaceForm, EMPTY_PLACE_FORM } from "@/components/place-form";
+import type { PlaceFormValues } from "@/components/place-form";
 import { parseTags } from "@/lib/tags";
 
 interface PlaceDetailSheetProps {
@@ -44,8 +35,7 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState<Partial<Place>>({});
-  const [editTags, setEditTags] = useState<string[]>([]);
+  const [form, setForm] = useState<PlaceFormValues>(EMPTY_PLACE_FORM);
 
   const photo = usePlacePhoto(place?.name, place?.city);
 
@@ -60,21 +50,16 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       source: place.source ?? "",
       notes: place.notes ?? "",
       url: place.url ?? "",
+      tags: parseTags(place.tags),
       status: place.status,
-      rating: place.rating ?? undefined,
+      rating: place.rating ?? null,
     });
-    setEditTags(parseTags(place.tags));
     setEditing(true);
   }
 
   function cancelEditing() {
     setEditing(false);
-    setForm({});
-    setEditTags([]);
-  }
-
-  function set(field: keyof Place, value: string | number | null) {
-    setForm((f) => ({ ...f, [field]: value }));
+    setForm(EMPTY_PLACE_FORM);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -85,12 +70,11 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
       const res = await fetch(`/api/places/${place.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, tags: editTags }),
+        body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Failed to save");
       setEditing(false);
-      setForm({});
-      setEditTags([]);
+      setForm(EMPTY_PLACE_FORM);
       onUpdated();
       toast.success("Place updated");
     } catch {
@@ -266,153 +250,11 @@ export function PlaceDetailSheet({ place, open, onOpenChange, onUpdated }: Place
             </SheetHeader>
 
             <form onSubmit={handleSave} className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-name">Name *</Label>
-                <Input
-                  id="edit-name"
-                  value={form.name ?? ""}
-                  onChange={(e) => set("name", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="edit-city">City *</Label>
-                  <AutocompleteInput
-                    id="edit-city"
-                    value={form.city ?? ""}
-                    onChange={(v) => set("city", v)}
-                    onSearch={async (q) => {
-                      const res = await fetch(`/api/autocomplete/cities?q=${encodeURIComponent(q)}`);
-                      return res.ok ? res.json() : [];
-                    }}
-                    onSelect={(opt) => {
-                      set("city", opt.value);
-                      if (opt.meta?.state) set("state", opt.meta.state as string);
-                      if (opt.meta?.country && !form.country) set("country", opt.meta.country as string);
-                    }}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="edit-state">State / Province</Label>
-                  <Input
-                    id="edit-state"
-                    placeholder="Optional"
-                    value={form.state ?? ""}
-                    onChange={(e) => set("state", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-country">Country *</Label>
-                <AutocompleteInput
-                  id="edit-country"
-                  value={form.country ?? ""}
-                  onChange={(v) => set("country", v)}
-                  onSearch={async (q) => {
-                    const res = await fetch(`/api/autocomplete/countries?q=${encodeURIComponent(q)}`);
-                    return res.ok ? res.json() : [];
-                  }}
-                  onSelect={(opt) => set("country", opt.value)}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label>Category</Label>
-                  <Select value={form.category ?? ""} onValueChange={(v) => set("category", v ?? "")}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue className="capitalize" placeholder="Pick one" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Source</Label>
-                  <Select value={form.source ?? ""} onValueChange={(v) => set("source", v ?? "")}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue className="capitalize" placeholder="Where from?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SOURCES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label>Status</Label>
-                  <Select value={form.status ?? "backlog"} onValueChange={(v) => {
-                  set("status", v ?? "backlog");
-                  if (v !== "visited") set("rating", null);
-                }}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue className="capitalize" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {form.status === "visited" && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label>Rating</Label>
-                    <Select
-                      value={form.rating ? String(form.rating) : ""}
-                      onValueChange={(v) => set("rating", v ? Number(v) : null)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="1–5" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {RATINGS.map((r) => (
-                          <SelectItem key={r} value={String(r)}>{r} / 5</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-notes">Notes</Label>
-                <textarea
-                  id="edit-notes"
-                  value={form.notes ?? ""}
-                  onChange={(e) => set("notes", e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label>Tags</Label>
-                <TagInput value={editTags} onChange={setEditTags} />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-url">Link</Label>
-                <Input
-                  id="edit-url"
-                  type="url"
-                  placeholder="https://..."
-                  value={form.url ?? ""}
-                  onChange={(e) => set("url", e.target.value)}
-                />
-              </div>
+              <PlaceForm
+                values={form}
+                onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+                mode="edit"
+              />
 
               <SheetFooter className="px-0 pt-2 pb-4 flex flex-col gap-3">
                 <div className="flex gap-3">
