@@ -123,7 +123,11 @@ export function AddPlacesSheet({
             );
           })}
           {sorted.length === 0 && (
-            <p className="pt-8 text-center text-sm text-muted-foreground">No places match your search.</p>
+            <li className="pt-8 text-center text-sm text-muted-foreground">
+              {places.length === 0
+                ? "Your backlog is empty — add some places first."
+                : "No places match your search."}
+            </li>
           )}
           {onAddNew && (
             <li className="pt-2 pb-1 text-center">

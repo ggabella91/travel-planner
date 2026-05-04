@@ -217,7 +217,7 @@ export default function HomePage() {
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <span className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[place.status] ?? "bg-zinc-300"}`} />
                         <p className="text-xs text-muted-foreground">
-                          {getFlag(place.country)} {place.city}, {place.country}
+                          {getFlag(place.country)} {place.city}{place.state ? `, ${place.state}` : ""}, {place.country}
                         </p>
                       </div>
                       {place.status === "visited" && place.rating && (
