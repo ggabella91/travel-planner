@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateTripSheet } from "@/components/create-trip-sheet";
 import { SignOutButton } from "@/components/sign-out-button";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { STATUS_LABELS, STATUS_ICONS } from "./constants";
 import { TripCard } from "./components/trip-card";
 import { useTrips } from "./hooks/use-trips";
@@ -31,11 +31,16 @@ export default function TripsPage() {
   const { trips, loading, error, reload } = useTrips();
   const [createOpen, setCreateOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredTrips = useMemo(
-    () => trips.filter((t) => filterStatus === "all" || t.status === filterStatus),
-    [trips, filterStatus],
-  );
+  const filteredTrips = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return trips.filter((t) => {
+      if (filterStatus !== "all" && t.status !== filterStatus) return false;
+      if (q && !t.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [trips, filterStatus, searchQuery]);
 
   const statusOptions = ["all", "planning", "active", "done"];
 
@@ -53,6 +58,28 @@ export default function TripsPage() {
             <SignOutButton />
           </div>
         </div>
+        {trips.length > 0 && (
+          <div className="mx-auto max-w-lg px-5 pb-3">
+            <div className="relative flex items-center">
+              <SearchIcon className="absolute left-3 size-3.5 text-muted-foreground/50 pointer-events-none" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search trips…"
+                className="w-full rounded-lg border border-input bg-muted/40 py-1.5 pl-8 pr-8 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring focus:ring-3 focus:ring-ring/50"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 cursor-pointer text-muted-foreground/50 hover:text-muted-foreground"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 [padding-bottom:max(9rem,calc(env(safe-area-inset-bottom)+9rem))]">
@@ -110,12 +137,12 @@ export default function TripsPage() {
 
             {filteredTrips.length === 0 ? (
               <div className="flex flex-col items-center gap-2 pt-16 text-center">
-                <p className="text-sm text-muted-foreground">No trips match your filters.</p>
+                <p className="text-sm text-muted-foreground">No trips match your search.</p>
                 <button
-                  onClick={() => setFilterStatus("all")}
+                  onClick={() => { setFilterStatus("all"); setSearchQuery(""); }}
                   className="text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
                 >
-                  Clear filter
+                  Clear filters
                 </button>
               </div>
             ) : (

@@ -2,7 +2,7 @@
 
 import { useState, use, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, PencilIcon, PlusIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronDownIcon, PencilIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +36,15 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const [addNewOpen, setAddNewOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  function toggleCollapsed(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   const addedPlaceIds = useMemo(
     () => new Set(tripPlaces.map((p) => p.id)),
@@ -58,6 +67,11 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     );
     return Math.max(maxDay + 1, 7);
   }, [trip, tripPlaces]);
+
+  const scheduledCount = useMemo(
+    () => tripPlaces.filter((p) => p.tripPlace.days.length > 0).length,
+    [tripPlaces],
+  );
 
   // Group places by day — a place can appear in multiple day buckets
   const grouped = useMemo(() => {
@@ -202,17 +216,30 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           </p>
         )}
 
+        {/* Summary stats */}
+        {!placesLoading && tripPlaces.length > 0 && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 py-3 border-b border-border/50">
+            <span className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground tabular-nums">{tripPlaces.length}</span> places
+            </span>
+            <span className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground tabular-nums">{scheduledCount}</span> scheduled
+            </span>
+            {tripPlaces.length - scheduledCount > 0 && (
+              <span className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground tabular-nums">{tripPlaces.length - scheduledCount}</span> unscheduled
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground tabular-nums">{numDays}</span> days
+            </span>
+          </div>
+        )}
+
         {/* Places section */}
         <div className="pt-4">
           <div className="flex items-center justify-between pb-3">
-            <h2 className="text-sm font-semibold">
-              Places
-              {!placesLoading && (
-                <span className="ml-2 text-xs font-normal text-muted-foreground/60 tabular-nums">
-                  {tripPlaces.length}
-                </span>
-              )}
-            </h2>
+            <h2 className="text-sm font-semibold">Places</h2>
           </div>
 
           {placesLoading ? (
@@ -232,45 +259,34 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
               <p className="text-xs text-muted-foreground/50">Tap + to add from your backlog.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
-              {/* Day sections */}
-              {Array.from({ length: numDays }, (_, i) => i + 1).map((day) => {
-                const dayPlaces = grouped.get(day) ?? [];
-                return (
-                  <div key={day}>
-                    <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      {trip && dayLabel(day, trip)}
-                    </p>
-                    {dayPlaces.length === 0 ? (
-                      <p className="text-xs text-muted-foreground/40 px-4">Nothing scheduled</p>
-                    ) : (
-                      <PlaceList
-                        places={dayPlaces}
-                        trip={trip!}
-                        numDays={numDays}
-                        currentDay={day}
-                        onDaysChange={handleDaysChange}
-                        onRemove={setConfirmRemove}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Unscheduled section */}
+            <div className="flex flex-col gap-4">
+              {/* Unscheduled — shown first so it's easy to act on */}
               {(() => {
                 const unscheduled = grouped.get(null) ?? [];
+                if (unscheduled.length === 0) return null;
+                const key = "unscheduled";
+                const isCollapsed = collapsed.has(key);
                 return (
                   <div>
-                    <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      Unscheduled
-                    </p>
-                    {unscheduled.length === 0 ? (
-                      <p className="text-xs text-muted-foreground/40 px-4">None</p>
-                    ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleCollapsed(key)}
+                      className="flex w-full cursor-pointer items-center gap-2 px-1 py-1 mb-2 text-left"
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        Unscheduled
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground/60">
+                        {unscheduled.length}
+                      </span>
+                      <ChevronDownIcon
+                        className={`ml-auto size-3.5 text-muted-foreground/50 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                      />
+                    </button>
+                    {!isCollapsed && (
                       <PlaceList
                         places={unscheduled}
-                        trip={trip!}
+                        trip={trip}
                         numDays={numDays}
                         currentDay={null}
                         onDaysChange={handleDaysChange}
@@ -280,6 +296,48 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 );
               })()}
+
+              {/* Day sections */}
+              {Array.from({ length: numDays }, (_, i) => i + 1).map((day) => {
+                const dayPlaces = grouped.get(day) ?? [];
+                const key = `day-${day}`;
+                const isCollapsed = collapsed.has(key);
+                return (
+                  <div key={day}>
+                    <button
+                      type="button"
+                      onClick={() => toggleCollapsed(key)}
+                      className="flex w-full cursor-pointer items-center gap-2 px-1 py-1 mb-2 text-left"
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        {dayLabel(day, trip)}
+                      </span>
+                      {dayPlaces.length > 0 && (
+                        <span className="text-xs tabular-nums text-muted-foreground/60">
+                          {dayPlaces.length}
+                        </span>
+                      )}
+                      <ChevronDownIcon
+                        className={`ml-auto size-3.5 text-muted-foreground/50 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                      />
+                    </button>
+                    {!isCollapsed && (
+                      dayPlaces.length === 0 ? (
+                        <p className="text-xs text-muted-foreground/40 px-1 pb-1">Nothing scheduled</p>
+                      ) : (
+                        <PlaceList
+                          places={dayPlaces}
+                          trip={trip}
+                          numDays={numDays}
+                          currentDay={day}
+                          onDaysChange={handleDaysChange}
+                          onRemove={setConfirmRemove}
+                        />
+                      )
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
