@@ -14,15 +14,32 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!owned) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
-  const rawDays: number[] = Array.isArray(body.days) ? body.days.map(Number) : [];
-  if (rawDays.some((d) => !Number.isInteger(d) || d < 1)) {
-    return Response.json({ error: "days must be positive integers" }, { status: 400 });
+  const updates: Partial<typeof tripPlaces.$inferInsert> = {};
+
+  if (body.days !== undefined) {
+    const rawDays: number[] = Array.isArray(body.days) ? body.days.map(Number) : [];
+    if (rawDays.some((d) => !Number.isInteger(d) || d < 1))
+      return Response.json({ error: "days must be positive integers" }, { status: 400 });
+    updates.days = JSON.stringify(rawDays);
   }
-  const days = rawDays;
+
+  if (body.note !== undefined) {
+    updates.note = body.note === "" || body.note === null ? null : String(body.note);
+  }
+
+  if (body.order !== undefined) {
+    const orderNum = Number(body.order);
+    if (!Number.isInteger(orderNum) || orderNum < 0)
+      return Response.json({ error: "order must be a non-negative integer" }, { status: 400 });
+    updates.order = orderNum;
+  }
+
+  if (Object.keys(updates).length === 0)
+    return Response.json({ error: "no fields to update" }, { status: 400 });
 
   const [row] = await db
     .update(tripPlaces)
-    .set({ days: JSON.stringify(days) })
+    .set(updates)
     .where(and(eq(tripPlaces.tripId, tripId), eq(tripPlaces.placeId, placeId)))
     .returning();
 

@@ -20,7 +20,7 @@ A personal travel planning tool. Single user, Google Sign-In auth. Two core flow
 
 - **API routes only** — use `/app/api/*/route.ts`. No Server Actions, with one exception: the login page uses a Server Action to call `signIn("google")` — this is required by Auth.js.
 - **IDs**: use `crypto.randomUUID()` for all new record IDs.
-- **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`). Required vars: `DATABASE_URL`, `UNSPLASH_ACCESS_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
+- **Env**: secrets live in `.env.local`. DB scripts use `--env-file=.env.local` to load it (see `package.json`). Required vars: `DATABASE_URL`, `UNSPLASH_ACCESS_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `FOURSQUARE_API_KEY` (place autocomplete — without it `/api/autocomplete/places` silently returns empty).
 - **Git commits**: all lowercase, one-line, no co-authored trailer. Example: `feat: add place detail sheet`.
 - **Modular architecture** — hooks, components, and utilities live in feature-scoped subfolders, e.g. `src/app/trips/hooks/`, `src/app/trips/components/`. Do not create top-level `src/hooks/` or `src/utils/` preemptively. A shared common layer is a deliberate decision made when code is genuinely needed across multiple unrelated features.
 - **`src/components/ui/` is shadcn-only** — feature components (sheets, cards, forms) start in `src/components/` and migrate into their feature folder once the feature grows enough to warrant it.

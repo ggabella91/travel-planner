@@ -73,7 +73,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
     [tripPlaces],
   );
 
-  // Group places by day — a place can appear in multiple day buckets
+  // Group places by day — a place can appear in multiple day buckets, sorted by order
   const grouped = useMemo(() => {
     const byDay = new Map<number | null, TripPlace[]>();
     byDay.set(null, []);
@@ -87,6 +87,9 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           byDay.get(d)!.push(p);
         }
       }
+    }
+    for (const bucket of byDay.values()) {
+      bucket.sort((a, b) => (a.tripPlace.order ?? Infinity) - (b.tripPlace.order ?? Infinity));
     }
     return byDay;
   }, [tripPlaces, numDays]);
@@ -120,6 +123,30 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
       toast.error("Failed to update days — try again");
       throw new Error();
     }
+    reloadTripPlaces();
+  }, [id, reloadTripPlaces]);
+
+  const handleNoteChange = useCallback(async (placeId: string, note: string | null) => {
+    const res = await fetch(`/api/trips/${id}/places/${placeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    });
+    if (!res.ok) toast.error("Failed to save note — try again");
+    else reloadTripPlaces();
+  }, [id, reloadTripPlaces]);
+
+  const handleReorder = useCallback(async (orderedPlaceIds: string[]) => {
+    // Fire-and-forget order updates; reload once all settle
+    await Promise.all(
+      orderedPlaceIds.map((placeId, index) =>
+        fetch(`/api/trips/${id}/places/${placeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: index }),
+        }),
+      ),
+    );
     reloadTripPlaces();
   }, [id, reloadTripPlaces]);
 
@@ -291,6 +318,8 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                         currentDay={null}
                         onDaysChange={handleDaysChange}
                         onRemove={setConfirmRemove}
+                        onNoteChange={handleNoteChange}
+                        onReorder={handleReorder}
                       />
                     )}
                   </div>
@@ -332,6 +361,8 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                           currentDay={day}
                           onDaysChange={handleDaysChange}
                           onRemove={setConfirmRemove}
+                          onNoteChange={handleNoteChange}
+                          onReorder={handleReorder}
                         />
                       )
                     )}
